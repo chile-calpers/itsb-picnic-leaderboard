@@ -170,7 +170,8 @@
   .leaderboard-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:0.88rem; }
   .leaderboard-list li.top-score{ border-color:var(--mustard); background:#fff8e2; }
   .lb-rank{ font-family:'Bebas Neue',sans-serif; width:26px; color:#888; }
-  .lb-score{ margin-left:auto; font-weight:700; }
+  .lb-score{ margin-left:auto; padding:2px 8px; font-weight:700; white-space:nowrap; }
+  .category-block > .leaderboard-list{ margin-top:10px; }
 
   .category-block{ border:1.5px solid #ddd; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
   .category-head{ display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; }
@@ -285,8 +286,8 @@
   'use strict';
 
   var STORAGE_KEY = 'picnic-scoreboard';
-  var STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuWLhA-WDK7G4eJwsvdsV4cs_kH7eGI3LAIunT9LtEjhU9UAfLhG9_ar5lbKZGhw/pub?gid=1167191601&single=true&output=csv';
-  var LEADERBOARDS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuWLhA-WDK7G4eJwsvdsV4cs_kH7eGI3LAIunT9LtEjhU9UAfLhG9_ar5lbKZGhw/pub?gid=708441666&single=true&output=csv';
+  var STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMGw_VEJMHt4LB7eBEjL0PDsLda0B6yAY7BS4nX_hOOyUywwMnzF1T52VUXWMK10h6YOpZRC2Lt5t6/pub?gid=650576605&single=true&output=csv';
+  var LEADERBOARDS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMGw_VEJMHt4LB7eBEjL0PDsLda0B6yAY7BS4nX_hOOyUywwMnzF1T52VUXWMK10h6YOpZRC2Lt5t6/pub?gid=2061706616&single=true&output=csv';
   var PALETTE = ['#7b4bb7','#ffffff','#2f8f5b','#d86645','#f2b233','#5db7c4'];
 
   var SEED_DIVISIONS = [
@@ -735,9 +736,10 @@
 
     var categories = [
       { game:'Water Balloon Toss', category:'Longest Toss', points:5, direction:'Highest wins' },
+      { game:'Bottle Flip', category:'Successful Flips', points:1, direction:'Highest wins' },
       { game:'Paper Airplanes', category:'Farthest Flight', points:1, direction:'Highest wins' },
       { game:'Paper Airplanes', category:'Longest Airborne / Hang Time', points:1, direction:'Highest wins' },
-      { game:'Paper Airplanes', category:'Closest to Ground Target (Hula Hoop)', points:1, direction:'Lowest wins' },
+      { game:'Paper Airplanes', category:'Closest to Ground Target (Hula Hoop)', displayCategory:'Closest to Ground Target', points:1, direction:'Lowest wins' },
       { game:'Hula Hoop', category:'Successful Hoop', points:1, direction:'Highest wins' }
     ];
 
@@ -753,7 +755,7 @@
         '</li>';
       }).join('') || '<li class="empty">No scores yet.</li>';
       return '<div class="category-block">' +
-        '<div class="category-head"><strong>' + escapeHtml(category.game + ' - ' + category.category) + '<small> ' + escapeHtml(category.direction) + '</small></strong><span class="pts">' + category.points + ' pt</span></div>' +
+        '<div class="category-head"><strong>' + escapeHtml(category.game + ' - ' + (category.displayCategory || category.category)) + '<small> ' + escapeHtml(category.direction) + '</small></strong><span class="pts">' + category.points + ' pt</span></div>' +
         '<ul class="leaderboard-list">' + rows + '</ul>' +
       '</div>';
     }).join('');
