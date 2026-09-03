@@ -102,6 +102,9 @@
   .panel-sub{ font-size:0.85rem; color:#555; margin:0 0 14px; }
 
   .empty{ color:#777; font-style:italic; padding:10px 0; list-style:none; }
+  .standings-loading{ display:flex; align-items:center; justify-content:center; gap:10px; min-height:72px; color:var(--grass-dark); font-size:0.9rem; }
+  .loading-spinner{ width:22px; height:22px; border:3px solid #d5e1d5; border-top-color:var(--tomato); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 
   /* Standings */
   .standings-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
@@ -251,7 +254,7 @@
     <div class="panel-card">
       <h2>Standings</h2>
       <p class="panel-sub">Live totals, computed from every result logged so far.</p>
-      <ul class="standings-list" id="standings-list"></ul>
+      <ul class="standings-list" id="standings-list" aria-live="polite"></ul>
       <div class="last-updated" id="last-updated"></div>
     </div>
   </section>
@@ -581,7 +584,12 @@
 
   function renderStandings(){
     var container = document.getElementById('standings-list');
-    var standings = remoteStandings || computeStandings();
+    if(!remoteStandings && !remoteLoadFailed){
+      container.innerHTML = '<li class="standings-loading"><span class="loading-spinner" aria-hidden="true"></span><span>Loading standings...</span></li>';
+      document.getElementById('last-updated').textContent = '';
+      return;
+    }
+    var standings = remoteStandings || [];
     var maxTotal = Math.max(1, Math.max.apply(null, standings.map(function(s){ return s.total; }).concat([0])));
 
     if(!standings.length){
