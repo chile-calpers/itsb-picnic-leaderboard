@@ -247,16 +247,26 @@
 
 <main>
   <nav class="tabs" aria-label="Scoreboard sections">
-    <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="standings" role="tab" aria-selected="true">Standings</button>
+    <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="standings" role="tab" aria-selected="true">Division Standings</button>
+    <button type="button" class="tab-btn" data-action="switch-tab" data-tab="leaderboards" role="tab" aria-selected="false">Individual Leaderboards</button>
     <button type="button" class="tab-btn" data-action="switch-tab" data-tab="rules" role="tab" aria-selected="false">Game Rules</button>
   </nav>
 
   <section id="tab-standings" class="tab-panel">
     <div class="panel-card">
-      <h2>Standings</h2>
+      <h2>Division Standings</h2>
       <p class="panel-sub">Live totals, computed from every result logged so far.</p>
       <ul class="standings-list" id="standings-list" aria-live="polite"></ul>
       <div class="last-updated" id="last-updated"></div>
+    </div>
+  </section>
+
+  <section id="tab-leaderboards" class="tab-panel">
+    <div class="panel-card">
+      <h2>Individual Leaderboards</h2>
+      <p class="panel-sub">Top individual scores by game category.</p>
+      <div id="leaderboards-list" aria-live="polite"></div>
+      <div class="last-updated" id="leaderboards-last-updated"></div>
     </div>
   </section>
 
@@ -276,6 +286,7 @@
 
   var STORAGE_KEY = 'picnic-scoreboard';
   var STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuWLhA-WDK7G4eJwsvdsV4cs_kH7eGI3LAIunT9LtEjhU9UAfLhG9_ar5lbKZGhw/pub?gid=1861546462&single=true&output=csv';
+  var LEADERBOARDS_CSV_URL = 'REPLACE_WITH_PUBLISHED_CSV_URL_FOR_THE_INDIVIDUAL_LEADERBOARDS_TAB';
   var PALETTE = ['#7b4bb7','#ffffff','#2f8f5b','#d86645','#f2b233','#5db7c4'];
 
   var SEED_DIVISIONS = [
@@ -292,7 +303,7 @@
       pointsForWin:5,
       description:'Open free play. Users sign up in duos and toss a water balloon back and forth, moving farther apart after each successful catch.',
       howToScore:'The longest successful duo toss earns 5 division points, bragging rights, and a prize.',
-      notes:'Water faucet onsite. VOLUNTEERS NEEDED.'
+      notes:'Water faucet onsite.'
     },
     {
       id:'cornhole',
@@ -302,7 +313,7 @@
       pointsPerWinUnconfirmed:true,
       description:'Open play and tournament play. Play to 11 points. After 3 consecutive wins, the winning team rotates out to give others a turn.',
       howToScore:'Score division points through game wins. A bag on the board is worth 1 point, a bag through the hole is worth 3 points, and opposing bags cancel each other out. Tournament winners also receive a prize.',
-      notes:'VOLUNTEERS NEEDED.'
+      notes:'Open play and tournament play.'
     },
     {
       id:'water-pong',
@@ -311,7 +322,7 @@
       pointsPerWin:1,
       description:'Open play and tournament play. Teams of 2 play timed elimination rounds.',
       howToScore:'The team that eliminates the most cups wins the round and earns 1 division point. Tournament winners also receive a prize.',
-      notes:'VOLUNTEERS NEEDED. Each end uses six cups partially filled with water.'
+      notes:'Each end uses six cups partially filled with water.'
     },
     {
       id:'mini-flip-cup',
@@ -320,7 +331,7 @@
       pointsPerWin:1,
       description:'Competitive timed team rounds. Teams may have 2, 4, 6, or more players, with one cup per team member.',
       howToScore:'Every person must successfully flip their cup. First team to flip all three cups wins the round = 1 point for that division.',
-      notes:'VOLUNTEERS NEEDED. No limit to plays.'
+      notes:'No limit to plays.'
     },
     {
       id:'paper-airplanes',
@@ -333,7 +344,7 @@
       ],
       description:'Fold a paper airplane and compete across three categories.',
       howToScore:'',
-      notes:'VOLUNTEERS NEEDED. Paper, a measuring tape or stakes, and a hula hoop ground target are needed.'
+      notes:'Paper, a measuring tape or stakes, and a hula hoop ground target are needed.'
     },
     {
       id:'bottle-flip',
@@ -345,7 +356,7 @@
       higherIsBetter:true,
       description:'Open play leaderboard. Each participant has 30 seconds and no limit to tries during the attempt.',
       howToScore:'The first record and each successive winning score earn 1 division point. The participant with the most flips at the end of the event earns 5 division points, a prize, and bragging rights.',
-      notes:'VOLUNTEERS NEEDED. Uses Kirkland 16oz water bottles, quarter-filled with water.'
+      notes:'Uses Kirkland 16oz water bottles, quarter-filled with water.'
     },
     {
       id:'hula-hoop',
@@ -357,13 +368,15 @@
       ],
       description:'Open free play.',
       howToScore:'The longest overall hula hooper earns 5 division points and a prize. Each successful hula hoop lasting at least 15 seconds earns 1 division point.',
-      notes:'VOLUNTEERS NEEDED. This is much harder than you think - trust the testers.'
+      notes:'This is much harder than you think - trust the testers.'
     }
   ];
 
   var state = null;
   var remoteStandings = null;
   var remoteLoadFailed = false;
+  var remoteLeaderboards = null;
+  var remoteLeaderboardsLoadFailed = false;
   var currentTab = 'standings';
   var currentGameId = null;
 
@@ -402,7 +415,7 @@
       divisions: JSON.parse(JSON.stringify(SEED_DIVISIONS)),
       games: JSON.parse(JSON.stringify(SEED_GAMES)),
       log: [],
-      rulesVersion: 2
+      rulesVersion: 3
     };
     saveData(fresh);
     return fresh;
@@ -413,12 +426,21 @@
   }
 
   function migrateRules(data){
-    if(data.rulesVersion >= 2) return data;
-    data.games = data.games.map(function(savedGame){
-      var seedGame = SEED_GAMES.find(function(game){ return game.id === savedGame.id; });
-      return seedGame ? JSON.parse(JSON.stringify(seedGame)) : savedGame;
-    });
-    data.rulesVersion = 2;
+    if(data.rulesVersion < 2){
+      data.games = data.games.map(function(savedGame){
+        var seedGame = SEED_GAMES.find(function(game){ return game.id === savedGame.id; });
+        return seedGame ? JSON.parse(JSON.stringify(seedGame)) : savedGame;
+      });
+      data.rulesVersion = 2;
+    }
+    if(data.rulesVersion < 3){
+      data.games.forEach(function(game){
+        ['description', 'howToScore', 'notes'].forEach(function(field){
+          if(typeof game[field] === 'string') game[field] = game[field].replace(/\bVOLUNTEERS NEEDED\.?\s*/gi, '').trim();
+        });
+      });
+      data.rulesVersion = 3;
+    }
     saveData(data);
     return data;
   }
@@ -469,6 +491,33 @@
         console.warn('Could not load published standings.', err);
         remoteLoadFailed = true;
         renderStandings();
+      });
+  }
+
+  function refreshRemoteLeaderboards(){
+    fetch(LEADERBOARDS_CSV_URL + (LEADERBOARDS_CSV_URL.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(), { cache:'no-store' })
+      .then(function(response){
+        if(!response.ok) throw new Error('Published individual leaderboards unavailable');
+        return response.text();
+      })
+      .then(function(text){
+        var rows = parseCsv(text);
+        var headerIndex = rows.findIndex(function(row){ return row[0] === 'Game' && row[1] === 'Category' && row[2] === 'Rank'; });
+        if(headerIndex < 0) throw new Error('Individual leaderboards header not found');
+        var grouped = {};
+        rows.slice(headerIndex + 1).filter(function(row){ return /^\d+$/.test(row[2]) && row[3]; }).forEach(function(row){
+          var key = row[0] + '|' + row[1];
+          if(!grouped[key]) grouped[key] = [];
+          grouped[key].push({ rank:Number(row[2]), participant:row[3], division:row[4], score:row[5] });
+        });
+        remoteLeaderboards = grouped;
+        remoteLeaderboardsLoadFailed = false;
+        renderLeaderboards();
+      })
+      .catch(function(err){
+        console.warn('Could not load published individual leaderboards.', err);
+        remoteLeaderboardsLoadFailed = true;
+        renderLeaderboards();
       });
   }
 
@@ -666,6 +715,48 @@
 
     var lastTs = state.log.reduce(function(m, e){ return Math.max(m, e.timestamp); }, 0);
     document.getElementById('last-updated').textContent = remoteStandings ? 'Live standings from Google Sheets' : (lastTs ? ('Last updated ' + new Date(lastTs).toLocaleString()) : 'No results logged yet');
+  }
+
+  function renderLeaderboards(){
+    var container = document.getElementById('leaderboards-list');
+    var updated = document.getElementById('leaderboards-last-updated');
+    if(!remoteLeaderboards && !remoteLeaderboardsLoadFailed){
+      container.innerHTML = '<div class="standings-loading"><span class="loading-spinner" aria-hidden="true"></span><span>Loading individual leaderboards...</span></div>';
+      updated.textContent = '';
+      return;
+    }
+    if(!remoteLeaderboards){
+      container.innerHTML = '<p class="empty">Individual leaderboards are unavailable. Please refresh shortly.</p>';
+      updated.textContent = '';
+      return;
+    }
+
+    var categories = [
+      { game:'Water Balloon Toss', category:'Longest Toss', points:5, direction:'Highest wins' },
+      { game:'Paper Airplanes', category:'Farthest Flight', points:1, direction:'Highest wins' },
+      { game:'Paper Airplanes', category:'Longest Airborne / Hang Time', points:1, direction:'Highest wins' },
+      { game:'Paper Airplanes', category:'Closest to Ground Target (Hula Hoop)', points:1, direction:'Lowest wins' },
+      { game:'Hula Hoop', category:'Successful Hoop', points:1, direction:'Highest wins' }
+    ];
+
+    var blocks = categories.map(function(category){
+      var key = category.game + '|' + category.category;
+      var entries = remoteLeaderboards[key] || [];
+      var rows = entries.map(function(entry){
+        return '<li class="' + (entry.rank === 1 ? 'top-score' : '') + '">' +
+          '<span class="lb-rank">#' + entry.rank + '</span>' +
+          '<span class="swatch" style="background:' + divisionColor(entry.division) + '"></span>' +
+          '<span>' + escapeHtml(entry.participant) + '</span>' +
+          '<span class="lb-score">' + escapeHtml(entry.score) + '</span>' +
+        '</li>';
+      }).join('') || '<li class="empty">No scores yet.</li>';
+      return '<div class="category-block">' +
+        '<div class="category-head"><strong>' + escapeHtml(category.game + ' - ' + category.category) + '<small> ' + escapeHtml(category.direction) + '</small></strong><span class="pts">' + category.points + ' pt</span></div>' +
+        '<ul class="leaderboard-list">' + rows + '</ul>' +
+      '</div>';
+    }).join('');
+    container.innerHTML = blocks;
+    updated.textContent = 'Live individual leaderboards from Google Sheets';
   }
 
   function renderRules(){
@@ -914,6 +1005,7 @@
     });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + tab); });
     if(tab === 'standings') renderStandings();
+    if(tab === 'leaderboards') renderLeaderboards();
     if(tab === 'rules') renderRules();
     if(tab === 'scorekeeper') renderScorekeeper();
     if(tab === 'setup') renderSetup();
@@ -1002,6 +1094,8 @@
   renderAll();
   refreshRemoteStandings();
   window.setInterval(refreshRemoteStandings, 60000);
+  refreshRemoteLeaderboards();
+  window.setInterval(refreshRemoteLeaderboards, 60000);
 
 })();
 </script>
