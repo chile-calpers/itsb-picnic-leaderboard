@@ -27,28 +27,27 @@ The team with the longest successful toss wins the challenge and earns **5 point
 
 ### Cornhole
 
-Open play is available throughout the event. Play to 11 points. After three consecutive wins, the winning team rotates out so others can play.
+Open play and tournament play are available. Play to 11 points. After three consecutive wins, the winning team rotates out so others can play.
 
 - A bag on the board is worth 1 point.
 - A bag through the hole is worth 3 points.
 - Opposing bags cancel each other out. Only net points count for the round.
 - Each recorded round win earns **1 point** for the winning division.
+- Tournament winners receive a prize.
 
 ### Water Pong
 
-Teams of two play one-minute rounds to eliminate as many cups as possible.
+Teams of two play timed elimination rounds in open play and tournament play. Each end uses six cups partially filled with water.
 
-The team that eliminates the most cups wins the round and earns **1 point** for its division. A winning team may stay on for up to two consecutive wins before rotating out. Each round win earns another point.
+The team that eliminates the most cups wins the round and earns **1 point** for its division. Tournament winners receive a prize.
 
-This is an ongoing activity and needs two tables and 24 cups.
-
-### Mini Flip Cup
+### Flip Cup
 
 Teams may have 2, 4, 6, or more players. Each team has three cups, with one person assigned to each cup.
 
 Every player must successfully flip their cup. The first team to flip all three cups wins the round and earns **1 point** for its division.
 
-This is an ongoing, self-reported activity. Use regular solo cups rather than the mini flip-cup board.
+This is an ongoing activity with no limit to plays. Use regular solo cups.
 
 ### Paper Airplanes
 
@@ -56,15 +55,24 @@ Fold a paper airplane and compete in three categories:
 
 - **Farthest Flight:** 1 point
 - **Longest Airborne / Hang Time:** 1 point
-- **Closest to Ground Target (Hula Hoop):** 2 points
+- **Closest to Ground Target (Hula Hoop):** 1 point
 
 For the ground-target category, the airplane must land inside the target to score. Paper is provided. A volunteer should record each category winner.
 
 ### Bottle Flip
 
-This is a timed, single-player challenge. Each attempt lasts 30 seconds. Count the number of successful bottle flips.
+This is an open-play leaderboard. Each participant has 30 seconds with no limit to tries during the attempt. Count the number of successful bottle flips.
 
-The highest score on the all-day leaderboard earns **5 points** for that player's division. Use a quarter-filled Kirkland 16 oz water bottle.
+Setting the first record and each successive winning score earns **1 division point**. The highest score at the end of the event earns **5 division points**, a prize, and bragging rights. Use a quarter-filled Kirkland 16 oz water bottle.
+
+### Hula Hoop
+
+Open free play. A coordinator is needed to track results.
+
+- The longest overall hula hooper earns **5 division points** and a prize.
+- Each successful hula hoop lasting at least 15 seconds earns **1 division point**.
+
+VOLUNTEERS NEEDED. This is much harder than you think. Trust the testers.
 
 ## Scoring summary
 
@@ -74,8 +82,9 @@ The highest score on the all-day leaderboard earns **5 points** for that player'
 | Cornhole | Round wins | 1 per win |
 | Water Pong | Round wins | 1 per win |
 | Mini Flip Cup | Round wins | 1 per win |
-| Paper Airplanes | Category winners | 1, 1, or 2 |
+| Paper Airplanes | Category winners | 1, 1, or 1 |
 | Bottle Flip | Best score of the day | 5 |
+| Hula Hoop | Longest winner and repeatable successes | 5 or 1 |
 
 ## Project files
 

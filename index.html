@@ -290,9 +290,9 @@
       name:'Water Balloon Toss',
       scoringType:'single',
       pointsForWin:5,
-      description:'Team of two from the same division. Toss the water balloon back and forth - each catch can be a step farther.',
-      howToScore:'The team with the longest successful toss wins the whole challenge.',
-      notes:'Division pride game - one winner for the whole event.'
+      description:'Open free play. Users sign up in duos and toss a water balloon back and forth, moving farther apart after each successful catch.',
+      howToScore:'The longest successful duo toss earns 5 division points, bragging rights, and a prize.',
+      notes:'Water faucet onsite. VOLUNTEERS NEEDED.'
     },
     {
       id:'cornhole',
@@ -300,27 +300,27 @@
       scoringType:'repeatable',
       pointsPerWin:1,
       pointsPerWinUnconfirmed:true,
-      description:'Open play on two easels - sign up and record scores. Play to 11 points. After 3 consecutive wins, the winning team rotates out to give others a turn.',
-      howToScore:'1 point per bag that lands and stays on the board. 3 points per bag through the hole. Opposing bags on the board cancel each other out - only net points count each round.',
-      notes:'Casual play or optional tournament bracket.'
+      description:'Open play and tournament play. Play to 11 points. After 3 consecutive wins, the winning team rotates out to give others a turn.',
+      howToScore:'Score division points through game wins. A bag on the board is worth 1 point, a bag through the hole is worth 3 points, and opposing bags cancel each other out. Tournament winners also receive a prize.',
+      notes:'VOLUNTEERS NEEDED.'
     },
     {
       id:'water-pong',
       name:'Water Pong',
       scoringType:'repeatable',
       pointsPerWin:1,
-      description:'Teams of 2. One-minute rounds to eliminate as many cups as possible.',
-      howToScore:'Most cups eliminated in the round wins. Each round win = 1 point for that division. The winning team may stay on for a max of 2 consecutive wins before rotating out - if they win multiple rounds, they earn a point for each win.',
-      notes:'Ongoing and coordinated all event long - needs 2 tables and 24 cups. Optional sign-up tournament bracket if there’s interest. Prizes involved.'
+      description:'Open play and tournament play. Teams of 2 play timed elimination rounds.',
+      howToScore:'The team that eliminates the most cups wins the round and earns 1 division point. Tournament winners also receive a prize.',
+      notes:'VOLUNTEERS NEEDED. Each end uses six cups partially filled with water.'
     },
     {
       id:'mini-flip-cup',
-      name:'Mini Flip Cup',
+      name:'Flip Cup',
       scoringType:'repeatable',
       pointsPerWin:1,
-      description:'Teams of 2, 4, 6, etc. Each team has three cups, one person per cup.',
+      description:'Competitive timed team rounds. Teams may have 2, 4, 6, or more players, with one cup per team member.',
       howToScore:'Every person must successfully flip their cup. First team to flip all three cups wins the round = 1 point for that division.',
-      notes:'Ongoing, self-reported scoreboard, all event long. Uses actual solo cups, not the mini flip-cup board (it broke during testing).'
+      notes:'VOLUNTEERS NEEDED. No limit to plays.'
     },
     {
       id:'paper-airplanes',
@@ -329,22 +329,35 @@
       categories:[
         { name:'Farthest Flight', points:1 },
         { name:'Longest Airborne / Hang Time', points:1 },
-        { name:'Closest to Ground Target (Hula Hoop)', points:2, note:'Must land within the target to score - landing outside earns no points.' }
+        { name:'Closest to Ground Target (Hula Hoop)', points:1, note:'Landing inside the target earns 1 division point.' }
       ],
       description:'Fold a paper airplane and compete across three categories.',
       howToScore:'',
-      notes:'Paper provided. Needs a volunteer to record scores. Ongoing activity - play anytime. Possible small prize per category winner.'
+      notes:'VOLUNTEERS NEEDED. Paper, a measuring tape or stakes, and a hula hoop ground target are needed.'
     },
     {
       id:'bottle-flip',
       name:'Bottle Flip',
       scoringType:'leaderboard',
+      pointsForRecord:1,
       pointsForTopScore:5,
       scoreUnit:'successful flips in 30 seconds',
       higherIsBetter:true,
-      description:'Casual, timed, single-person challenge. 30 seconds to flip the bottle as many times as possible.',
-      howToScore:'Most successful flips within 30 seconds wins that attempt. Leaderboard tracked all day - the single best score of the day earns 5 points for their division.',
-      notes:'Uses Kirkland 16oz water bottles, quarter-filled with water. Ongoing, coordinated, prize for the winner.'
+      description:'Open play leaderboard. Each participant has 30 seconds and no limit to tries during the attempt.',
+      howToScore:'The first record and each successive winning score earn 1 division point. The participant with the most flips at the end of the event earns 5 division points, a prize, and bragging rights.',
+      notes:'VOLUNTEERS NEEDED. Uses Kirkland 16oz water bottles, quarter-filled with water.'
+    },
+    {
+      id:'hula-hoop',
+      name:'Hula Hoop',
+      scoringType:'multi-category',
+      categories:[
+        { name:'Longest Overall Hula Hooper', points:5 },
+        { name:'Successful Hula Hoop (15+ seconds)', points:1, repeatable:true, note:'Each successful hula hoop must last at least 15 seconds.' }
+      ],
+      description:'Open free play.',
+      howToScore:'The longest overall hula hooper earns 5 division points and a prize. Each successful hula hoop lasting at least 15 seconds earns 1 division point.',
+      notes:'VOLUNTEERS NEEDED. This is much harder than you think - trust the testers.'
     }
   ];
 
@@ -375,6 +388,12 @@
       if(raw){
         var parsed = JSON.parse(raw);
         if(parsed && Array.isArray(parsed.divisions) && Array.isArray(parsed.games) && Array.isArray(parsed.log)){
+          parsed = migrateRules(parsed);
+          var hulaHoop = SEED_GAMES.find(function(game){ return game.id === 'hula-hoop'; });
+          if(hulaHoop && !parsed.games.some(function(game){ return game.id === hulaHoop.id; })){
+            parsed.games.push(JSON.parse(JSON.stringify(hulaHoop)));
+            saveData(parsed);
+          }
           return parsed;
         }
       }
@@ -382,7 +401,8 @@
     var fresh = {
       divisions: JSON.parse(JSON.stringify(SEED_DIVISIONS)),
       games: JSON.parse(JSON.stringify(SEED_GAMES)),
-      log: []
+      log: [],
+      rulesVersion: 2
     };
     saveData(fresh);
     return fresh;
@@ -390,6 +410,17 @@
 
   function saveData(data){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function migrateRules(data){
+    if(data.rulesVersion >= 2) return data;
+    data.games = data.games.map(function(savedGame){
+      var seedGame = SEED_GAMES.find(function(game){ return game.id === savedGame.id; });
+      return seedGame ? JSON.parse(JSON.stringify(seedGame)) : savedGame;
+    });
+    data.rulesVersion = 2;
+    saveData(data);
+    return data;
   }
 
   function parseCsv(text){
@@ -479,12 +510,25 @@
       } else if(game.scoringType === 'multi-category'){
         (game.categories || []).forEach(function(cat){
           var catEntries = entries.filter(function(e){ return e.categoryName === cat.name; });
-          var catEntry = catEntries[catEntries.length - 1];
-          if(catEntry) addPoints(catEntry.divisionId, game, Number(cat.points) || 0);
+          if(cat.repeatable){
+            var counts = {};
+            catEntries.forEach(function(e){ counts[e.divisionId] = (counts[e.divisionId] || 0) + 1; });
+            Object.keys(counts).forEach(function(divId){ addPoints(divId, game, counts[divId] * (Number(cat.points) || 0)); });
+          } else {
+            var catEntry = catEntries[catEntries.length - 1];
+            if(catEntry) addPoints(catEntry.divisionId, game, Number(cat.points) || 0);
+          }
         });
       } else if(game.scoringType === 'leaderboard'){
         if(entries.length){
           var sorted = sortLeaderboardEntries(entries, game.higherIsBetter);
+          var recordHolder = null;
+          entries.slice().sort(function(a,b){ return a.timestamp - b.timestamp; }).forEach(function(entry){
+            if(recordHolder === null || (game.higherIsBetter ? entry.score > recordHolder : entry.score < recordHolder)){
+              addPoints(entry.divisionId, game, Number(game.pointsForRecord) || 0);
+              recordHolder = entry.score;
+            }
+          });
           addPoints(sorted[0].divisionId, game, Number(game.pointsForTopScore) || 0);
         }
       }
@@ -555,9 +599,9 @@
     state.log.push({ id: uid(), gameId: gameId, divisionId: divisionId, timestamp: Date.now() });
     saveData(state); renderAll();
   }
-  function logCategoryResult(gameId, categoryName, divisionId){
+  function logCategoryResult(gameId, categoryName, divisionId, repeatable){
     if(!divisionId) return;
-    state.log = state.log.filter(function(e){ return !(e.gameId === gameId && e.categoryName === categoryName); });
+    if(!repeatable) state.log = state.log.filter(function(e){ return !(e.gameId === gameId && e.categoryName === categoryName); });
     state.log.push({ id: uid(), gameId: gameId, categoryName: categoryName, divisionId: divisionId, timestamp: Date.now() });
     saveData(state); renderAll();
   }
@@ -744,15 +788,18 @@
         var catEntries = state.log.filter(function(e){ return e.gameId === game.id && e.categoryName === cat.name; });
         var catCurrent = catEntries[catEntries.length - 1];
         var catDiv = catCurrent && state.divisions.find(function(d){ return d.id === catCurrent.divisionId; });
+        var categoryPoints = Number(cat.points) || 0;
         return '<div class="category-block">' +
           '<div class="category-head"><strong>' + escapeHtml(cat.name) + '</strong><span class="pts">' + cat.points + ' pt' + (cat.points === 1 ? '' : 's') + '</span></div>' +
           (cat.note ? '<p class="cat-note">' + escapeHtml(cat.note) + '</p>' : '') +
-          (catCurrent && catDiv
+          (cat.repeatable
+            ? '<div class="current-record">Successful results logged: <strong>' + catEntries.length + '</strong> (' + (catEntries.length * categoryPoints) + ' points)</div>'
+            : catCurrent && catDiv
             ? '<div class="current-record">Current winner: <strong style="color:' + catDiv.color + '">' + escapeHtml(catDiv.name) + '</strong></div>'
             : '<div class="current-record">No winner logged yet.</div>') +
-          '<form data-action="log-category" data-id="' + game.id + '" data-category="' + escapeHtml(cat.name) + '" class="score-form">' +
+          '<form data-action="log-category" data-repeatable="' + (cat.repeatable ? 'true' : 'false') + '" data-id="' + game.id + '" data-category="' + escapeHtml(cat.name) + '" class="score-form">' +
             '<label>Division<select name="divisionId" required>' + divisionOptions + '</select></label>' +
-            '<button type="submit" class="btn btn-log">' + (catCurrent ? 'Overwrite Winner' : 'Log Winner') + '</button>' +
+            '<button type="submit" class="btn btn-log">' + (cat.repeatable ? 'Log Result (+' + categoryPoints + ' pt)' : (catCurrent ? 'Overwrite Winner' : 'Log Winner')) + '</button>' +
           '</form>' +
         '</div>';
       }).join('') || '<p class="empty">No categories configured for this game.</p>';
@@ -901,7 +948,7 @@
     if(action === 'log-single') logSingleResult(gameId, fd.get('divisionId'));
     else if(action === 'log-repeatable') logRepeatable(gameId, fd.get('divisionId'));
     else if(action === 'log-leaderboard') logLeaderboard(gameId, fd.get('divisionId'), (fd.get('participantName') || '').trim(), Number(fd.get('score')));
-    else if(action === 'log-category') logCategoryResult(gameId, form.dataset.category, fd.get('divisionId'));
+    else if(action === 'log-category') logCategoryResult(gameId, form.dataset.category, fd.get('divisionId'), form.dataset.repeatable === 'true');
   });
 
   function handleFieldEdit(e){
