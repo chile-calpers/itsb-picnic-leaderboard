@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ITSB Picnic Leaderboard | CalPERS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grass:#007f86;
+    --grass-dark:#123b59;
+    --grass-light:#159aa0;
+    --mustard:#f2b233;
+    --tomato:#d86645;
+    --sky:#5db7c4;
+    --cream:#f7f4ea;
+    --ink:#17324a;
+    --paper:#ffffff;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--grass);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(242,178,51,0.2) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 85% 35%, rgba(255,255,255,0.12) 0 1px, transparent 1.5px),
+      linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25% 50%, rgba(255,255,255,0.04) 50% 75%, transparent 75%),
+      linear-gradient(160deg, var(--grass) 0%, var(--grass-dark) 100%);
+    background-size: auto, auto, 72px 72px, auto;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    padding-bottom:48px;
+  }
+
+  h1,h2,h3,h4{ font-family:'Bebas Neue', 'Inter', sans-serif; letter-spacing:0.03em; margin:0; }
+
+  .app-header{
+    text-align:center;
+    padding:32px 16px 0;
+    color:var(--cream);
+  }
+  .app-header .eyebrow{ margin:0 0 4px; font-size:0.75rem; font-weight:800; letter-spacing:0.16em; color:var(--mustard); }
+  .app-header h1{ font-size:clamp(2.1rem, 6vw, 3.2rem); text-shadow:2px 2px 0 var(--grass-dark); }
+  .app-header p{ margin:6px 0 0; font-size:0.95rem; color:rgba(247,244,234,0.88); }
+
+  .bunting{ display:flex; justify-content:center; gap:5px; padding:16px 8px 6px; flex-wrap:wrap; }
+  .bunting .flag{ width:24px; height:32px; clip-path:polygon(0 0,100% 0,50% 100%); }
+  .bunting .flag:nth-child(4n+1){ background:var(--mustard); }
+  .bunting .flag:nth-child(4n+2){ background:var(--sky); }
+  .bunting .flag:nth-child(4n+3){ background:var(--cream); }
+  .bunting .flag:nth-child(4n+4){ background:var(--tomato); }
+
+  main{ max-width:760px; margin:0 auto; padding:12px 14px 0; }
+
+  .tabs{ display:flex; gap:8px; margin:8px 0 16px; }
+  .tab-btn{
+    flex:1;
+    font-family:'Bebas Neue', sans-serif;
+    font-size:1.15rem;
+    letter-spacing:0.04em;
+    padding:11px 6px;
+    border:3px solid var(--ink);
+    border-radius:8px 8px 0 0;
+    background:var(--grass-light);
+    color:var(--cream);
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--grass-dark);
+  }
+  .tab-btn.active{ background:var(--mustard); color:var(--ink); box-shadow:3px 3px 0 var(--tomato); }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .rules-list{ display:flex; flex-direction:column; gap:10px; }
+  .rule-item{ border:2px solid var(--ink); border-radius:8px; background:#fffdf6; overflow:hidden; }
+  .rule-item summary{ display:flex; align-items:center; gap:10px; cursor:pointer; list-style:none; padding:12px 14px; font-weight:700; }
+  .rule-item summary::-webkit-details-marker{ display:none; }
+  .rule-item summary::after{ content:'+'; margin-left:auto; font-family:'Bebas Neue',sans-serif; font-size:1.35rem; color:var(--tomato); }
+  .rule-item[open] summary::after{ content:'-'; }
+  .rule-number{ font-family:'Bebas Neue',sans-serif; color:#777; font-size:1.1rem; }
+  .rule-type{ margin-left:auto; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#556; }
+  .rule-content{ padding:0 14px 14px; border-top:1.5px dashed #cfc8b4; }
+  .rule-content p{ margin:10px 0 0; font-size:0.9rem; line-height:1.5; }
+  .rule-content strong{ color:var(--grass-dark); }
+  .rule-categories{ margin:8px 0 0; padding-left:20px; font-size:0.88rem; }
+  .rule-categories li{ margin:5px 0; }
+
+  .panel-card{
+    background:var(--paper);
+    border:3px solid var(--ink);
+    border-radius:10px;
+    box-shadow:5px 5px 0 var(--grass-dark);
+    padding:18px;
+    margin-bottom:20px;
+  }
+  .panel-card h2{ font-size:1.6rem; margin-bottom:4px; }
+  .panel-sub{ font-size:0.85rem; color:#555; margin:0 0 14px; }
+
+  .empty{ color:#777; font-style:italic; padding:10px 0; list-style:none; }
+
+  /* Standings */
+  .standings-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  .division-row{
+    border:2px solid var(--ink);
+    border-radius:8px;
+    padding:10px 12px;
+    background:#fffdf6;
+  }
+  .division-row.leader{ border-color:var(--mustard); box-shadow:0 0 0 3px rgba(232,173,31,0.35); }
+  .division-row-main{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .swatch{ width:16px; height:16px; border-radius:50%; border:2px solid var(--ink); flex-shrink:0; }
+  .rank{ font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:#888; width:28px; }
+  .division-name{ font-weight:700; font-size:1.05rem; flex:1; min-width:80px; }
+  .leader-badge{ background:var(--mustard); color:var(--ink); font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; border:1.5px solid var(--ink); }
+  .division-total{ font-family:'Bebas Neue',sans-serif; font-size:1.7rem; color:var(--tomato); min-width:38px; text-align:right; }
+  .bar-track{ margin-top:8px; height:14px; background:#eee6d0; border:1.5px solid var(--ink); border-radius:8px; overflow:hidden; }
+  .bar-fill{ height:100%; min-width:2px; transition:width 0.3s ease; }
+  details.breakdown{ margin-top:8px; font-size:0.88rem; }
+  details.breakdown summary{ cursor:pointer; color:var(--grass-dark); font-weight:600; }
+  .breakdown-list{ margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+  .breakdown-row{ display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dashed #ddd; }
+  .breakdown-empty{ color:#999; font-style:italic; }
+  .last-updated{ margin-top:14px; font-size:0.82rem; color:#777; text-align:right; }
+
+  /* Scorekeeper */
+  .scorekeeper-layout{ display:grid; grid-template-columns:220px 1fr; gap:16px; }
+  @media (max-width:700px){ .scorekeeper-layout{ grid-template-columns:1fr; } }
+
+  .game-select-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .game-pick{
+    width:100%; text-align:left; background:#f4efdd; border:2px solid var(--ink); border-radius:6px;
+    padding:8px 10px; cursor:pointer; display:flex; flex-direction:column; gap:2px;
+  }
+  .game-pick.active{ background:var(--sky); color:var(--ink); }
+  .game-pick-name{ font-weight:700; font-size:0.94rem; }
+  .game-pick-type{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#556; }
+  .game-pick.active .game-pick-type{ color:#123; }
+
+  .game-detail-header h3{ font-size:1.5rem; margin-bottom:4px; }
+  .game-desc{ margin:0 0 6px; font-size:0.92rem; }
+  .game-how{ margin:0 0 6px; font-size:0.88rem; background:#fff7dd; border-left:4px solid var(--mustard); padding:6px 10px; }
+  .game-notes{ margin:0 0 12px; font-size:0.82rem; color:#666; font-style:italic; }
+
+  .current-record{ font-size:0.9rem; margin:8px 0; padding:6px 10px; background:#eef6ec; border-radius:6px; border:1.5px dashed var(--grass); }
+
+  .score-form{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin:10px 0 6px; }
+  .score-form label{ display:flex; flex-direction:column; font-size:0.78rem; font-weight:600; color:#444; gap:4px; }
+  .score-form select, .score-form input{
+    font-family:inherit; font-size:0.95rem; padding:8px 9px; border:2px solid var(--ink); border-radius:6px; background:#fff;
+  }
+  .btn{
+    font-family:'Bebas Neue',sans-serif; font-size:1.05rem; letter-spacing:0.03em;
+    border:2.5px solid var(--ink); border-radius:6px; padding:9px 16px; cursor:pointer;
+    box-shadow:2.5px 2.5px 0 var(--ink); background:var(--mustard); color:var(--ink);
+  }
+  .btn:active{ box-shadow:1px 1px 0 var(--ink); transform:translate(1px,1px); }
+  .btn-log{ background:var(--tomato); color:var(--cream); }
+
+  .lb-heading{ font-size:1.05rem; margin:14px 0 6px; }
+  .leaderboard-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+  .leaderboard-list li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:0.88rem; }
+  .leaderboard-list li.top-score{ border-color:var(--mustard); background:#fff8e2; }
+  .lb-rank{ font-family:'Bebas Neue',sans-serif; width:26px; color:#888; }
+  .lb-score{ margin-left:auto; font-weight:700; }
+
+  .category-block{ border:1.5px solid #ddd; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .category-head{ display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; }
+  .category-head .pts{ background:var(--sky); border:1.5px solid var(--ink); border-radius:20px; padding:1px 9px; font-size:0.75rem; font-weight:700; }
+  .cat-note{ font-size:0.78rem; color:#777; margin:4px 0; }
+
+  .recent-log-section{ margin-top:6px; }
+  .recent-log{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:520px; overflow-y:auto; }
+  .log-row{ border:1.5px solid #e2ddc9; border-radius:6px; padding:7px 10px; background:#fffef9; }
+  .log-row-main{ display:flex; align-items:center; gap:7px; font-size:0.9rem; font-weight:600; }
+  .log-game{ color:#666; font-weight:500; font-size:0.82rem; margin-left:auto; }
+  .log-row-sub{ display:flex; align-items:center; gap:8px; margin-top:3px; font-size:0.78rem; color:#777; }
+  .log-time{ margin-left:auto; }
+  .log-delete{ background:none; border:1.5px solid var(--tomato); color:var(--tomato); border-radius:5px; width:22px; height:22px; line-height:1; cursor:pointer; font-size:0.8rem; }
+
+  /* Setup */
+  .setup-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; list-style:none; }
+  .setup-row input[type="text"]{ flex:1; font-family:inherit; font-size:0.95rem; padding:8px 9px; border:2px solid var(--ink); border-radius:6px; }
+  .setup-row input[type="color"]{ width:38px; height:38px; border:2px solid var(--ink); border-radius:6px; padding:0; background:none; cursor:pointer; }
+
+  .btn-remove{ background:var(--tomato); color:var(--cream); border:2px solid var(--ink); border-radius:6px; padding:7px 10px; cursor:pointer; font-size:0.78rem; font-weight:700; }
+  .btn-remove-sm{ background:var(--tomato); color:var(--cream); border:1.5px solid var(--ink); border-radius:5px; width:26px; cursor:pointer; }
+  .btn-add-sm{ background:var(--sky); border:1.5px solid var(--ink); border-radius:6px; padding:6px 10px; cursor:pointer; font-size:0.8rem; font-weight:600; }
+  .add-row-btn{ background:var(--grass-light); color:var(--cream); border:2px solid var(--ink); border-radius:6px; padding:8px 14px; cursor:pointer; font-weight:700; margin-top:4px; }
+
+  #division-setup-list, #game-setup-list{ list-style:none; margin:0; padding:0; }
+
+  .setup-game-card{ border:2px solid var(--ink); border-radius:8px; padding:12px; margin-bottom:14px; background:#fffdf6; }
+  .setup-game-top{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .game-name-input{ flex:1; min-width:140px; font-family:inherit; font-weight:700; font-size:1rem; padding:8px 9px; border:2px solid var(--ink); border-radius:6px; }
+  .setup-game-top select{ font-family:inherit; padding:8px 9px; border:2px solid var(--ink); border-radius:6px; }
+
+  .setup-field{ display:block; font-size:0.76rem; font-weight:600; color:#555; margin-bottom:8px; }
+  .setup-field textarea{ display:block; width:100%; margin-top:4px; font-family:inherit; font-size:0.88rem; padding:7px 8px; border:1.5px solid #ccc; border-radius:6px; resize:vertical; }
+
+  .type-fields{ margin-top:6px; padding-top:8px; border-top:1.5px dashed #ddd; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  .setup-field-inline{ display:flex; flex-direction:column; font-size:0.76rem; font-weight:600; color:#555; gap:4px; }
+  .setup-field-inline input[type="number"], .setup-field-inline input[type="text"]{ font-family:inherit; padding:7px 8px; border:1.5px solid #ccc; border-radius:6px; width:150px; }
+  .checkbox-inline{ flex-direction:row; align-items:center; gap:6px; }
+
+  .flag-warning{ background:#fff2df; border:1.5px solid var(--mustard); color:#8a5a00; font-size:0.8rem; padding:6px 9px; border-radius:6px; margin:0 0 8px; }
+
+  .categories-editor{ width:100%; }
+  .categories-label{ font-size:0.78rem; font-weight:700; margin:0 0 6px; color:#555; }
+  .category-edit-row{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+  .category-edit-row input[type="text"]:nth-child(1){ flex:1; min-width:110px; }
+  .category-edit-row input[type="number"]{ width:64px; }
+  .category-edit-row input[type="text"]:nth-child(3){ flex:1; min-width:110px; }
+  .category-edit-row input{ font-family:inherit; padding:7px 8px; border:1.5px solid #ccc; border-radius:6px; }
+
+  .danger-zone{ margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; }
+  .danger-zone .btn{ background:#fff; }
+
+  .qr-note{ margin-top:16px; font-size:0.82rem; background:#eef6ec; border:1.5px dashed var(--grass); border-radius:8px; padding:10px 12px; color:#345; }
+
+  @media (max-width:480px){
+    .division-total{ font-size:1.4rem; }
+    .score-form select, .score-form input{ width:100%; }
+    .score-form label{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>ITSB Picnic Leaderboard</h1>
+  <p>Good games, good company, and a little friendly competition.</p>
+</header>
+<div class="bunting" aria-hidden="true">
+  <div class="flag"></div><div class="flag"></div><div class="flag"></div><div class="flag"></div>
+  <div class="flag"></div><div class="flag"></div><div class="flag"></div><div class="flag"></div>
+  <div class="flag"></div><div class="flag"></div><div class="flag"></div><div class="flag"></div>
+</div>
+
+<main>
+  <nav class="tabs" aria-label="Scoreboard sections">
+    <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="standings" role="tab" aria-selected="true">Standings</button>
+    <button type="button" class="tab-btn" data-action="switch-tab" data-tab="rules" role="tab" aria-selected="false">Game Rules</button>
+  </nav>
+
+  <section id="tab-standings" class="tab-panel">
+    <div class="panel-card">
+      <h2>Standings</h2>
+      <p class="panel-sub">Live totals, computed from every result logged so far.</p>
+      <ul class="standings-list" id="standings-list"></ul>
+      <div class="last-updated" id="last-updated"></div>
+    </div>
+  </section>
+
+  <section id="tab-rules" class="tab-panel">
+    <div class="panel-card">
+      <h2>Game Rules</h2>
+      <p class="panel-sub">Open a game to see how to play and score it.</p>
+      <div class="rules-list" id="rules-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'picnic-scoreboard';
+  var STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuWLhA-WDK7G4eJwsvdsV4cs_kH7eGI3LAIunT9LtEjhU9UAfLhG9_ar5lbKZGhw/pub?gid=1861546462&single=true&output=csv';
+  var PALETTE = ['#7b4bb7','#ffffff','#2f8f5b','#d86645','#f2b233','#5db7c4'];
+
+  var SEED_DIVISIONS = [
+    { id:'div-tisd', name:'TISD', color:'#7b4bb7' },
+    { id:'div-esdd', name:'ESDD', color:'#ffffff' },
+    { id:'div-tbmd', name:'TBMD', color:'#2f8f5b' }
+  ];
+
+  var SEED_GAMES = [
+    {
+      id:'water-balloon-toss',
+      name:'Water Balloon Toss',
+      scoringType:'single',
+      pointsForWin:5,
+      description:'Team of two from the same division. Toss the water balloon back and forth - each catch can be a step farther.',
+      howToScore:'The team with the longest successful toss wins the whole challenge.',
+      notes:'Division pride game - one winner for the whole event.'
+    },
+    {
+      id:'cornhole',
+      name:'Cornhole',
+      scoringType:'repeatable',
+      pointsPerWin:1,
+      pointsPerWinUnconfirmed:true,
+      description:'Open play on two easels - sign up and record scores. Play to 11 points. After 3 consecutive wins, the winning team rotates out to give others a turn.',
+      howToScore:'1 point per bag that lands and stays on the board. 3 points per bag through the hole. Opposing bags on the board cancel each other out - only net points count each round.',
+      notes:'Casual play or optional tournament bracket.'
+    },
+    {
+      id:'water-pong',
+      name:'Water Pong',
+      scoringType:'repeatable',
+      pointsPerWin:1,
+      description:'Teams of 2. One-minute rounds to eliminate as many cups as possible.',
+      howToScore:'Most cups eliminated in the round wins. Each round win = 1 point for that division. The winning team may stay on for a max of 2 consecutive wins before rotating out - if they win multiple rounds, they earn a point for each win.',
+      notes:'Ongoing and coordinated all event long - needs 2 tables and 24 cups. Optional sign-up tournament bracket if there’s interest. Prizes involved.'
+    },
+    {
+      id:'mini-flip-cup',
+      name:'Mini Flip Cup',
+      scoringType:'repeatable',
+      pointsPerWin:1,
+      description:'Teams of 2, 4, 6, etc. Each team has three cups, one person per cup.',
+      howToScore:'Every person must successfully flip their cup. First team to flip all three cups wins the round = 1 point for that division.',
+      notes:'Ongoing, self-reported scoreboard, all event long. Uses actual solo cups, not the mini flip-cup board (it broke during testing).'
+    },
+    {
+      id:'paper-airplanes',
+      name:'Paper Airplanes',
+      scoringType:'multi-category',
+      categories:[
+        { name:'Farthest Flight', points:1 },
+        { name:'Longest Airborne / Hang Time', points:1 },
+        { name:'Closest to Ground Target (Hula Hoop)', points:2, note:'Must land within the target to score - landing outside earns no points.' }
+      ],
+      description:'Fold a paper airplane and compete across three categories.',
+      howToScore:'',
+      notes:'Paper provided. Needs a volunteer to record scores. Ongoing activity - play anytime. Possible small prize per category winner.'
+    },
+    {
+      id:'bottle-flip',
+      name:'Bottle Flip',
+      scoringType:'leaderboard',
+      pointsForTopScore:5,
+      scoreUnit:'successful flips in 30 seconds',
+      higherIsBetter:true,
+      description:'Casual, timed, single-person challenge. 30 seconds to flip the bottle as many times as possible.',
+      howToScore:'Most successful flips within 30 seconds wins that attempt. Leaderboard tracked all day - the single best score of the day earns 5 points for their division.',
+      notes:'Uses Kirkland 16oz water bottles, quarter-filled with water. Ongoing, coordinated, prize for the winner.'
+    }
+  ];
+
+  var state = null;
+  var remoteStandings = null;
+  var remoteLoadFailed = false;
+  var currentTab = 'standings';
+  var currentGameId = null;
+
+  function uid(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[—–−]/g, '-').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function scoringTypeLabel(t){
+    return { single:'Single Winner', repeatable:'Repeatable', leaderboard:'Leaderboard', 'multi-category':'Multi-Category' }[t] || t;
+  }
+
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.divisions) && Array.isArray(parsed.games) && Array.isArray(parsed.log)){
+          return parsed;
+        }
+      }
+    }catch(err){ console.warn('Could not read saved scoreboard data, starting fresh.', err); }
+    var fresh = {
+      divisions: JSON.parse(JSON.stringify(SEED_DIVISIONS)),
+      games: JSON.parse(JSON.stringify(SEED_GAMES)),
+      log: []
+    };
+    saveData(fresh);
+    return fresh;
+  }
+
+  function saveData(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function parseCsv(text){
+    var rows = [], row = [], cell = '', quoted = false;
+    for(var i = 0; i < text.length; i++){
+      var character = text[i];
+      var next = text[i + 1];
+      if(character === '"' && quoted && next === '"'){ cell += '"'; i++; }
+      else if(character === '"'){ quoted = !quoted; }
+      else if(character === ',' && !quoted){ row.push(cell.trim()); cell = ''; }
+      else if((character === '\n' || character === '\r') && !quoted){
+        if(character === '\r' && next === '\n') i++;
+        row.push(cell.trim());
+        if(row.some(function(value){ return value !== ''; })) rows.push(row);
+        row = []; cell = '';
+      } else cell += character;
+    }
+    row.push(cell.trim());
+    if(row.some(function(value){ return value !== ''; })) rows.push(row);
+    return rows;
+  }
+
+  function refreshRemoteStandings(){
+    fetch(STANDINGS_CSV_URL + '&_=' + Date.now(), { cache:'no-store' })
+      .then(function(response){
+        if(!response.ok) throw new Error('Published standings unavailable');
+        return response.text();
+      })
+      .then(function(text){
+        var rows = parseCsv(text);
+        var headerIndex = rows.findIndex(function(row){ return row[0] === 'Rank' && row[1] === 'Division' && row[2] === 'Total Points'; });
+        if(headerIndex < 0) throw new Error('Standings header not found');
+        var headers = rows[headerIndex];
+        remoteStandings = rows.slice(headerIndex + 1).filter(function(row){ return /^\d+$/.test(row[0]) && row[1]; }).map(function(row){
+          var breakdown = {};
+          headers.slice(3).forEach(function(name, index){
+            if(name && name !== 'Total Points' && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
+          });
+          return { division:{ id:'remote-' + row[1], name:row[1], color:divisionColor(row[1]) }, total:Number(row[2]) || 0, breakdown:breakdown };
+        });
+        renderStandings();
+      })
+      .catch(function(err){
+        console.warn('Could not load published standings.', err);
+        remoteLoadFailed = true;
+        renderStandings();
+      });
+  }
+
+  function divisionColor(name){
+    return { TISD:'#7b4bb7', ESDD:'#ffffff', TBMD:'#2f8f5b' }[name] || '#999';
+  }
+
+  function sortLeaderboardEntries(entries, higherIsBetter){
+    return entries.slice().sort(function(a,b){
+      if(a.score !== b.score) return higherIsBetter ? b.score - a.score : a.score - b.score;
+      return a.timestamp - b.timestamp;
+    });
+  }
+
+  function computeStandings(){
+    var rows = state.divisions.map(function(d){ return { division:d, total:0, breakdown:{} }; });
+    var byId = {};
+    rows.forEach(function(r){ byId[r.division.id] = r; });
+
+    function addPoints(divisionId, game, points){
+      var row = byId[divisionId];
+      if(!row) return;
+      row.total += points;
+      if(!row.breakdown[game.id]) row.breakdown[game.id] = { gameName: game.name, points: 0 };
+      row.breakdown[game.id].points += points;
+    }
+
+    state.games.forEach(function(game){
+      var entries = state.log.filter(function(e){ return e.gameId === game.id; });
+      if(game.scoringType === 'single'){
+        var entry = entries[entries.length - 1];
+        if(entry) addPoints(entry.divisionId, game, Number(game.pointsForWin) || 0);
+      } else if(game.scoringType === 'repeatable'){
+        var counts = {};
+        entries.forEach(function(e){ counts[e.divisionId] = (counts[e.divisionId] || 0) + 1; });
+        Object.keys(counts).forEach(function(divId){
+          addPoints(divId, game, counts[divId] * (Number(game.pointsPerWin) || 0));
+        });
+      } else if(game.scoringType === 'multi-category'){
+        (game.categories || []).forEach(function(cat){
+          var catEntries = entries.filter(function(e){ return e.categoryName === cat.name; });
+          var catEntry = catEntries[catEntries.length - 1];
+          if(catEntry) addPoints(catEntry.divisionId, game, Number(cat.points) || 0);
+        });
+      } else if(game.scoringType === 'leaderboard'){
+        if(entries.length){
+          var sorted = sortLeaderboardEntries(entries, game.higherIsBetter);
+          addPoints(sorted[0].divisionId, game, Number(game.pointsForTopScore) || 0);
+        }
+      }
+    });
+
+    rows.sort(function(a,b){
+      return b.total - a.total || a.division.name.localeCompare(b.division.name);
+    });
+    return rows;
+  }
+
+  // ---- mutations ----
+
+  function addDivision(){
+    state.divisions.push({ id: uid(), name: 'New Division', color: PALETTE[state.divisions.length % PALETTE.length] });
+    saveData(state); renderAll();
+  }
+  function removeDivision(id){
+    if(!confirm('Remove this division? Its logged results will stay in the log but stop counting toward standings.')) return;
+    state.divisions = state.divisions.filter(function(d){ return d.id !== id; });
+    saveData(state); renderAll();
+  }
+  function addGame(){
+    state.games.push({ id: uid(), name: 'New Game', scoringType:'repeatable', pointsPerWin:1, description:'', howToScore:'', notes:'' });
+    saveData(state); renderAll();
+  }
+  function removeGame(id){
+    if(!confirm('Remove this game? Its logged results will stay in the log but stop counting toward standings.')) return;
+    state.games = state.games.filter(function(g){ return g.id !== id; });
+    if(currentGameId === id) currentGameId = null;
+    saveData(state); renderAll();
+  }
+  function addCategory(gameId){
+    var g = state.games.find(function(g){ return g.id === gameId; });
+    if(!g) return;
+    g.categories = g.categories || [];
+    g.categories.push({ name:'New Category', points:1 });
+    saveData(state); renderAll();
+  }
+  function removeCategory(gameId, index){
+    var g = state.games.find(function(g){ return g.id === gameId; });
+    if(!g || !g.categories) return;
+    g.categories.splice(index, 1);
+    saveData(state); renderAll();
+  }
+  function restoreDefaultGames(){
+    if(!confirm('Restore the 6 default games? This replaces all current game configs. Divisions and the results log are unaffected.')) return;
+    state.games = JSON.parse(JSON.stringify(SEED_GAMES));
+    saveData(state); renderAll();
+  }
+  function resetLog(){
+    if(!confirm('Clear every logged result? This cannot be undone. Divisions and games are kept.')) return;
+    state.log = [];
+    saveData(state); renderAll();
+  }
+  function deleteLogEntry(id){
+    state.log = state.log.filter(function(e){ return e.id !== id; });
+    saveData(state); renderAll();
+  }
+  function logSingleResult(gameId, divisionId){
+    if(!divisionId) return;
+    state.log = state.log.filter(function(e){ return e.gameId !== gameId; });
+    state.log.push({ id: uid(), gameId: gameId, divisionId: divisionId, timestamp: Date.now() });
+    saveData(state); renderAll();
+  }
+  function logRepeatable(gameId, divisionId){
+    if(!divisionId) return;
+    state.log.push({ id: uid(), gameId: gameId, divisionId: divisionId, timestamp: Date.now() });
+    saveData(state); renderAll();
+  }
+  function logCategoryResult(gameId, categoryName, divisionId){
+    if(!divisionId) return;
+    state.log = state.log.filter(function(e){ return !(e.gameId === gameId && e.categoryName === categoryName); });
+    state.log.push({ id: uid(), gameId: gameId, categoryName: categoryName, divisionId: divisionId, timestamp: Date.now() });
+    saveData(state); renderAll();
+  }
+  function logLeaderboard(gameId, divisionId, participantName, score){
+    if(!divisionId || Number.isNaN(score)) return;
+    state.log.push({ id: uid(), gameId: gameId, divisionId: divisionId, participantName: participantName || '', score: score, timestamp: Date.now() });
+    saveData(state); renderAll();
+  }
+
+  function applyScoringTypeDefaults(g, newType){
+    g.scoringType = newType;
+    if(newType === 'single' && g.pointsForWin === undefined) g.pointsForWin = 1;
+    if(newType === 'repeatable' && g.pointsPerWin === undefined) g.pointsPerWin = 1;
+    if(newType === 'leaderboard'){
+      if(g.pointsForTopScore === undefined) g.pointsForTopScore = 1;
+      if(g.scoreUnit === undefined) g.scoreUnit = 'points';
+      if(g.higherIsBetter === undefined) g.higherIsBetter = true;
+    }
+    if(newType === 'multi-category' && !g.categories) g.categories = [];
+  }
+
+  // ---- rendering ----
+
+  function renderAll(){
+    renderStandings();
+  }
+
+  function renderStandings(){
+    var container = document.getElementById('standings-list');
+    var standings = remoteStandings || computeStandings();
+    var maxTotal = Math.max(1, Math.max.apply(null, standings.map(function(s){ return s.total; }).concat([0])));
+
+    if(!standings.length){
+      container.innerHTML = '<li class="empty">' + (remoteLoadFailed ? 'Live standings are unavailable. Please refresh shortly.' : 'No standings available yet.') + '</li>';
+    } else {
+      container.innerHTML = standings.map(function(s, i){
+        var pct = Math.round((s.total / maxTotal) * 100);
+        var isLeader = i === 0 && s.total > 0;
+        var breakdownEntries = Object.keys(s.breakdown).map(function(gid){ return s.breakdown[gid]; });
+        var breakdownRows = breakdownEntries.map(function(b){
+          return '<div class="breakdown-row"><span>' + escapeHtml(b.gameName) + '</span><span>' + b.points + ' pt' + (b.points === 1 ? '' : 's') + '</span></div>';
+        }).join('') || '<div class="breakdown-empty">No points yet</div>';
+
+        return '<li class="division-row ' + (isLeader ? 'leader' : '') + '">' +
+          '<div class="division-row-main">' +
+            '<span class="rank">#' + (i + 1) + '</span>' +
+            '<span class="swatch" style="background:' + s.division.color + '"></span>' +
+            '<span class="division-name">' + escapeHtml(s.division.name) + '</span>' +
+            (isLeader ? '<span class="leader-badge">🏆 Leading</span>' : '') +
+            '<span class="division-total">' + s.total + '</span>' +
+          '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + s.division.color + '"></div></div>' +
+          '<details class="breakdown"><summary>Breakdown</summary><div class="breakdown-list">' + breakdownRows + '</div></details>' +
+        '</li>';
+      }).join('');
+    }
+
+    var lastTs = state.log.reduce(function(m, e){ return Math.max(m, e.timestamp); }, 0);
+    document.getElementById('last-updated').textContent = remoteStandings ? 'Live standings from Google Sheets' : (lastTs ? ('Last updated ' + new Date(lastTs).toLocaleString()) : 'No results logged yet');
+  }
+
+  function renderRules(){
+    var container = document.getElementById('rules-list');
+    if(!state.games.length){
+      container.innerHTML = '<p class="empty">No games configured yet.</p>';
+      return;
+    }
+    container.innerHTML = state.games.map(function(game, index){
+      var scoring = '';
+      if(game.scoringType === 'single') scoring = (game.pointsForWin || 0) + ' points for winner';
+      else if(game.scoringType === 'repeatable') scoring = (game.pointsPerWin || 0) + ' point' + ((game.pointsPerWin || 0) === 1 ? '' : 's') + ' per win';
+      else if(game.scoringType === 'leaderboard') scoring = (game.pointsForTopScore || 0) + ' points for top score';
+      else if(game.scoringType === 'multi-category') scoring = 'Multiple categories';
+
+      var categories = (game.categories || []).map(function(category){
+        return '<li><strong>' + escapeHtml(category.name) + '</strong>: ' + category.points + ' point' + (category.points === 1 ? '' : 's') + (category.note ? ' - ' + escapeHtml(category.note) : '') + '</li>';
+      }).join('');
+
+      return '<details class="rule-item">' +
+        '<summary><span class="rule-number">' + String(index + 1).padStart(2, '0') + '</span><span>' + escapeHtml(game.name) + '</span><span class="rule-type">' + escapeHtml(scoringTypeLabel(game.scoringType)) + '</span></summary>' +
+        '<div class="rule-content">' +
+          (game.description ? '<p>' + escapeHtml(game.description) + '</p>' : '') +
+          (game.howToScore ? '<p><strong>How to score:</strong> ' + escapeHtml(game.howToScore) + '</p>' : '') +
+          (categories ? '<ul class="rule-categories">' + categories + '</ul>' : '') +
+          (game.notes ? '<p><strong>Notes:</strong> ' + escapeHtml(game.notes) + '</p>' : '') +
+          (!game.description && !game.howToScore && !categories && !game.notes ? '<p class="empty">No rules added for this game yet.</p>' : '') +
+        '</div>' +
+      '</details>';
+    }).join('');
+  }
+
+  function renderScorekeeper(){
+    if(!currentGameId && state.games.length) currentGameId = state.games[0].id;
+    if(currentGameId && !state.games.some(function(g){ return g.id === currentGameId; })){
+      currentGameId = state.games.length ? state.games[0].id : null;
+    }
+
+    var listEl = document.getElementById('game-select-list');
+    listEl.innerHTML = state.games.map(function(g){
+      return '<li><button type="button" class="game-pick ' + (g.id === currentGameId ? 'active' : '') + '" data-action="select-game" data-id="' + g.id + '">' +
+        '<span class="game-pick-name">' + escapeHtml(g.name) + '</span>' +
+        '<span class="game-pick-type">' + scoringTypeLabel(g.scoringType) + '</span>' +
+      '</button></li>';
+    }).join('') || '<li class="empty">No games configured. Add one in Setup.</li>';
+
+    var detailEl = document.getElementById('game-detail');
+    var game = state.games.find(function(g){ return g.id === currentGameId; });
+    detailEl.innerHTML = game ? renderGameForm(game) : '<p class="empty">Select a game to log a result.</p>';
+
+    var logListEl = document.getElementById('recent-log');
+    var entries = state.log.slice().sort(function(a,b){ return b.timestamp - a.timestamp; });
+    logListEl.innerHTML = entries.map(renderLogRow).join('') || '<li class="empty">No results logged yet.</li>';
+  }
+
+  function renderGameForm(game){
+    var divisionOptions = state.divisions.map(function(d){
+      return '<option value="' + d.id + '">' + escapeHtml(d.name) + '</option>';
+    }).join('');
+
+    var header = '<div class="game-detail-header">' +
+      '<h3>' + escapeHtml(game.name) + '</h3>' +
+      (game.description ? '<p class="game-desc">' + escapeHtml(game.description) + '</p>' : '') +
+      (game.howToScore ? '<p class="game-how"><strong>How to score:</strong> ' + escapeHtml(game.howToScore) + '</p>' : '') +
+      (game.notes ? '<p class="game-notes">' + escapeHtml(game.notes) + '</p>' : '') +
+    '</div>';
+
+    if(!state.divisions.length){
+      return header + '<p class="empty">Add divisions in Setup before logging results.</p>';
+    }
+
+    var body = '';
+
+    if(game.scoringType === 'single'){
+      var entries = state.log.filter(function(e){ return e.gameId === game.id; });
+      var current = entries[entries.length - 1];
+      var currentDiv = current && state.divisions.find(function(d){ return d.id === current.divisionId; });
+      body =
+        (current && currentDiv
+          ? '<div class="current-record">Current record holder: <strong style="color:' + currentDiv.color + '">' + escapeHtml(currentDiv.name) + '</strong></div>'
+          : '<div class="current-record">No winner logged yet.</div>') +
+        '<form data-action="log-single" data-id="' + game.id + '" class="score-form">' +
+          '<label>Division<select name="divisionId" required>' + divisionOptions + '</select></label>' +
+          '<button type="submit" class="btn btn-log">' + (current ? 'Overwrite Winner' : 'Log Winner') + '</button>' +
+        '</form>';
+
+    } else if(game.scoringType === 'repeatable'){
+      body =
+        '<form data-action="log-repeatable" data-id="' + game.id + '" class="score-form">' +
+          '<label>Division<select name="divisionId" required>' + divisionOptions + '</select></label>' +
+          '<button type="submit" class="btn btn-log">Log Result (+' + game.pointsPerWin + ' pt)</button>' +
+        '</form>';
+
+    } else if(game.scoringType === 'leaderboard'){
+      var lbEntries = state.log.filter(function(e){ return e.gameId === game.id; });
+      var sorted = sortLeaderboardEntries(lbEntries, game.higherIsBetter);
+      var rows = sorted.slice(0, 10).map(function(e, i){
+        var div = state.divisions.find(function(d){ return d.id === e.divisionId; });
+        var who = e.participantName ? escapeHtml(e.participantName) : (div ? escapeHtml(div.name) : '-');
+        return '<li class="' + (i === 0 ? 'top-score' : '') + '">' +
+          '<span class="lb-rank">#' + (i + 1) + '</span>' +
+          '<span class="swatch" style="background:' + (div ? div.color : '#999') + '"></span>' +
+          '<span>' + who + '</span>' +
+          '<span class="lb-score">' + e.score + ' ' + escapeHtml(game.scoreUnit || '') + '</span>' +
+        '</li>';
+      }).join('') || '<li class="empty">No attempts yet.</li>';
+
+      body =
+        '<form data-action="log-leaderboard" data-id="' + game.id + '" class="score-form">' +
+          '<label>Division<select name="divisionId" required>' + divisionOptions + '</select></label>' +
+          '<label>Participant (optional)<input type="text" name="participantName" placeholder="Name"></label>' +
+          '<label>Score (' + escapeHtml(game.scoreUnit || '') + ')<input type="number" name="score" step="any" required></label>' +
+          '<button type="submit" class="btn btn-log">Log Attempt</button>' +
+        '</form>' +
+        '<h4 class="lb-heading">Leaderboard (' + (game.higherIsBetter ? 'highest' : 'lowest') + ' wins)</h4>' +
+        '<ul class="leaderboard-list">' + rows + '</ul>';
+
+    } else if(game.scoringType === 'multi-category'){
+      body = (game.categories || []).map(function(cat){
+        var catEntries = state.log.filter(function(e){ return e.gameId === game.id && e.categoryName === cat.name; });
+        var catCurrent = catEntries[catEntries.length - 1];
+        var catDiv = catCurrent && state.divisions.find(function(d){ return d.id === catCurrent.divisionId; });
+        return '<div class="category-block">' +
+          '<div class="category-head"><strong>' + escapeHtml(cat.name) + '</strong><span class="pts">' + cat.points + ' pt' + (cat.points === 1 ? '' : 's') + '</span></div>' +
+          (cat.note ? '<p class="cat-note">' + escapeHtml(cat.note) + '</p>' : '') +
+          (catCurrent && catDiv
+            ? '<div class="current-record">Current winner: <strong style="color:' + catDiv.color + '">' + escapeHtml(catDiv.name) + '</strong></div>'
+            : '<div class="current-record">No winner logged yet.</div>') +
+          '<form data-action="log-category" data-id="' + game.id + '" data-category="' + escapeHtml(cat.name) + '" class="score-form">' +
+            '<label>Division<select name="divisionId" required>' + divisionOptions + '</select></label>' +
+            '<button type="submit" class="btn btn-log">' + (catCurrent ? 'Overwrite Winner' : 'Log Winner') + '</button>' +
+          '</form>' +
+        '</div>';
+      }).join('') || '<p class="empty">No categories configured for this game.</p>';
+    }
+
+    return header + body;
+  }
+
+  function renderLogRow(e){
+    var game = state.games.find(function(g){ return g.id === e.gameId; });
+    var div = state.divisions.find(function(d){ return d.id === e.divisionId; });
+    var gameName = game ? game.name : '(deleted game)';
+    var divName = div ? div.name : '(deleted division)';
+    var divColor = div ? div.color : '#999';
+    var detail;
+    if(e.score !== undefined){
+      detail = e.score + ' ' + (game ? escapeHtml(game.scoreUnit || '') : '') + (e.participantName ? ' - ' + escapeHtml(e.participantName) : '');
+    } else if(e.categoryName){
+      detail = escapeHtml(e.categoryName);
+    } else {
+      detail = (game && game.scoringType === 'single') ? 'Event winner' : 'Round win';
+    }
+    return '<li class="log-row">' +
+      '<div class="log-row-main">' +
+        '<span class="swatch" style="background:' + divColor + '"></span>' +
+        '<span class="log-division">' + escapeHtml(divName) + '</span>' +
+        '<span class="log-game">' + escapeHtml(gameName) + '</span>' +
+      '</div>' +
+      '<div class="log-row-sub">' +
+        '<span class="log-detail">' + detail + '</span>' +
+        '<span class="log-time">' + new Date(e.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) + '</span>' +
+        '<button type="button" class="log-delete" data-action="delete-log" data-id="' + e.id + '" aria-label="Delete entry">✕</button>' +
+      '</div>' +
+    '</li>';
+  }
+
+  function renderSetup(){
+    var divWrap = document.getElementById('division-setup-list');
+    divWrap.innerHTML = state.divisions.map(function(d){
+      return '<li class="setup-row">' +
+        '<input type="color" data-division-field="color" data-id="' + d.id + '" value="' + d.color + '">' +
+        '<input type="text" data-division-field="name" data-id="' + d.id + '" value="' + escapeHtml(d.name) + '" placeholder="Division name">' +
+        '<button type="button" class="btn-remove" data-action="remove-division" data-id="' + d.id + '">Remove</button>' +
+      '</li>';
+    }).join('') || '<li class="empty">No divisions yet.</li>';
+
+    var gameWrap = document.getElementById('game-setup-list');
+    gameWrap.innerHTML = state.games.map(renderGameSetupCard).join('') || '<li class="empty">No games yet.</li>';
+  }
+
+  function renderGameSetupCard(g){
+    var flag = (g.id === 'cornhole' && g.pointsPerWinUnconfirmed)
+      ? '<p class="flag-warning">⚠ Points-per-win not specified in the source rules - defaulted to ' + g.pointsPerWin + '. Please confirm with the organizer (editing the value below clears this flag).</p>'
+      : '';
+
+    return '<li class="setup-game-card">' +
+      '<div class="setup-game-top">' +
+        '<input type="text" class="game-name-input" data-game-field="name" data-id="' + g.id + '" value="' + escapeHtml(g.name) + '" placeholder="Game name">' +
+        '<select data-game-field="scoringType" data-id="' + g.id + '">' +
+          ['single','repeatable','leaderboard','multi-category'].map(function(t){
+            return '<option value="' + t + '" ' + (t === g.scoringType ? 'selected' : '') + '>' + scoringTypeLabel(t) + '</option>';
+          }).join('') +
+        '</select>' +
+        '<button type="button" class="btn-remove" data-action="remove-game" data-id="' + g.id + '">Remove</button>' +
+      '</div>' +
+      '<label class="setup-field">Description<textarea data-game-field="description" data-id="' + g.id + '" rows="2">' + escapeHtml(g.description || '') + '</textarea></label>' +
+      '<label class="setup-field">How to score<textarea data-game-field="howToScore" data-id="' + g.id + '" rows="2">' + escapeHtml(g.howToScore || '') + '</textarea></label>' +
+      '<label class="setup-field">Notes<textarea data-game-field="notes" data-id="' + g.id + '" rows="2">' + escapeHtml(g.notes || '') + '</textarea></label>' +
+      flag +
+      '<div class="type-fields">' + renderGameTypeFields(g) + '</div>' +
+    '</li>';
+  }
+
+  function renderGameTypeFields(g){
+    if(g.scoringType === 'single'){
+      return '<label class="setup-field-inline">Points for win<input type="number" min="0" data-game-field="pointsForWin" data-id="' + g.id + '" value="' + (g.pointsForWin != null ? g.pointsForWin : 0) + '"></label>';
+    }
+    if(g.scoringType === 'repeatable'){
+      return '<label class="setup-field-inline">Points per win<input type="number" min="0" data-game-field="pointsPerWin" data-id="' + g.id + '" value="' + (g.pointsPerWin != null ? g.pointsPerWin : 0) + '"></label>';
+    }
+    if(g.scoringType === 'leaderboard'){
+      return '<label class="setup-field-inline">Points for top score<input type="number" min="0" data-game-field="pointsForTopScore" data-id="' + g.id + '" value="' + (g.pointsForTopScore != null ? g.pointsForTopScore : 0) + '"></label>' +
+        '<label class="setup-field-inline">Score unit<input type="text" data-game-field="scoreUnit" data-id="' + g.id + '" value="' + escapeHtml(g.scoreUnit || '') + '"></label>' +
+        '<label class="setup-field-inline checkbox-inline"><input type="checkbox" data-game-field="higherIsBetter" data-id="' + g.id + '" ' + (g.higherIsBetter ? 'checked' : '') + '> Higher score is better</label>';
+    }
+    if(g.scoringType === 'multi-category'){
+      var rows = (g.categories || []).map(function(cat, i){
+        return '<div class="category-edit-row">' +
+          '<input type="text" data-cat-field="name" data-game="' + g.id + '" data-index="' + i + '" value="' + escapeHtml(cat.name) + '" placeholder="Category name">' +
+          '<input type="number" min="0" data-cat-field="points" data-game="' + g.id + '" data-index="' + i + '" value="' + (cat.points != null ? cat.points : 0) + '">' +
+          '<input type="text" data-cat-field="note" data-game="' + g.id + '" data-index="' + i + '" value="' + escapeHtml(cat.note || '') + '" placeholder="Note (optional)">' +
+          '<button type="button" class="btn-remove-sm" data-action="remove-category" data-game="' + g.id + '" data-index="' + i + '">✕</button>' +
+        '</div>';
+      }).join('');
+      return '<div class="categories-editor">' +
+        '<p class="categories-label">Categories</p>' +
+        rows +
+        '<button type="button" class="btn-add-sm" data-action="add-category" data-game="' + g.id + '">+ Add category</button>' +
+      '</div>';
+    }
+    return '';
+  }
+
+  // ---- tab switching ----
+
+  function setTab(tab){
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(function(b){
+      var isActive = b.dataset.tab === tab;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + tab); });
+    if(tab === 'standings') renderStandings();
+    if(tab === 'rules') renderRules();
+    if(tab === 'scorekeeper') renderScorekeeper();
+    if(tab === 'setup') renderSetup();
+  }
+
+  // ---- event delegation ----
+
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-action]');
+    if(!el) return;
+    var action = el.dataset.action;
+    if(action === 'switch-tab') setTab(el.dataset.tab);
+    else if(action === 'select-game'){ currentGameId = el.dataset.id; renderScorekeeper(); }
+    else if(action === 'delete-log') deleteLogEntry(el.dataset.id);
+    else if(action === 'add-division') addDivision();
+    else if(action === 'remove-division') removeDivision(el.dataset.id);
+    else if(action === 'add-game') addGame();
+    else if(action === 'remove-game') removeGame(el.dataset.id);
+    else if(action === 'add-category') addCategory(el.dataset.game);
+    else if(action === 'remove-category') removeCategory(el.dataset.game, Number(el.dataset.index));
+    else if(action === 'restore-games') restoreDefaultGames();
+    else if(action === 'reset-log') resetLog();
+  });
+
+  document.addEventListener('submit', function(e){
+    var form = e.target;
+    if(!form.dataset || !form.dataset.action) return;
+    e.preventDefault();
+    var action = form.dataset.action;
+    var gameId = form.dataset.id;
+    var fd = new FormData(form);
+    if(action === 'log-single') logSingleResult(gameId, fd.get('divisionId'));
+    else if(action === 'log-repeatable') logRepeatable(gameId, fd.get('divisionId'));
+    else if(action === 'log-leaderboard') logLeaderboard(gameId, fd.get('divisionId'), (fd.get('participantName') || '').trim(), Number(fd.get('score')));
+    else if(action === 'log-category') logCategoryResult(gameId, form.dataset.category, fd.get('divisionId'));
+  });
+
+  function handleFieldEdit(e){
+    var t = e.target;
+    if(t.dataset.divisionField){
+      var div = state.divisions.find(function(d){ return d.id === t.dataset.id; });
+      if(div){ div[t.dataset.divisionField] = t.value; saveData(state); }
+      return;
+    }
+    if(t.dataset.gameField){
+      var g = state.games.find(function(g){ return g.id === t.dataset.id; });
+      if(!g) return;
+      var field = t.dataset.gameField;
+      if(field === 'higherIsBetter'){ g[field] = t.checked; saveData(state); return; }
+      if(field === 'pointsForWin' || field === 'pointsPerWin' || field === 'pointsForTopScore'){
+        g[field] = t.value === '' ? 0 : Number(t.value);
+        if(g.id === 'cornhole' && field === 'pointsPerWin') g.pointsPerWinUnconfirmed = false;
+        saveData(state);
+        return;
+      }
+      if(field === 'scoringType'){
+        applyScoringTypeDefaults(g, t.value);
+        saveData(state);
+        renderSetup();
+        return;
+      }
+      g[field] = t.value;
+      saveData(state);
+      return;
+    }
+    if(t.dataset.catField){
+      var game = state.games.find(function(g){ return g.id === t.dataset.game; });
+      if(!game || !game.categories) return;
+      var idx = Number(t.dataset.index);
+      var cat = game.categories[idx];
+      if(!cat) return;
+      var f = t.dataset.catField;
+      cat[f] = f === 'points' ? (t.value === '' ? 0 : Number(t.value)) : t.value;
+      saveData(state);
+      return;
+    }
+  }
+
+  document.addEventListener('input', handleFieldEdit);
+  document.addEventListener('change', handleFieldEdit);
+
+  // ---- init ----
+
+  state = loadData();
+  setTab('standings');
+  renderAll();
+  refreshRemoteStandings();
+  window.setInterval(refreshRemoteStandings, 60000);
+
+})();
+</script>
+</body>
+</html>
