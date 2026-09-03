@@ -83,7 +83,8 @@
   .rule-item summary::after{ content:'+'; margin-left:auto; font-family:'Bebas Neue',sans-serif; font-size:1.35rem; color:var(--tomato); }
   .rule-item[open] summary::after{ content:'-'; }
   .rule-number{ font-family:'Bebas Neue',sans-serif; color:#777; font-size:1.1rem; }
-  .rule-type{ margin-left:auto; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#556; }
+  .rule-item summary > span:nth-child(2){ flex:1; }
+  .rule-type{ width:130px; flex-shrink:0; text-align:right; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#556; }
   .rule-content{ padding:0 14px 14px; border-top:1.5px dashed #cfc8b4; }
   .rule-content p{ margin:10px 0 0; font-size:0.9rem; line-height:1.5; }
   .rule-content strong{ color:var(--grass-dark); }
@@ -422,10 +423,12 @@
         var headerIndex = rows.findIndex(function(row){ return row[0] === 'Rank' && row[1] === 'Division' && row[2] === 'Total Points'; });
         if(headerIndex < 0) throw new Error('Standings header not found');
         var headers = rows[headerIndex];
+        var gameNames = {};
+        state.games.forEach(function(game){ gameNames[game.name] = true; });
         remoteStandings = rows.slice(headerIndex + 1).filter(function(row){ return /^\d+$/.test(row[0]) && row[1]; }).map(function(row){
           var breakdown = {};
           headers.slice(3).forEach(function(name, index){
-            if(name && name !== 'Total Points' && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
+            if(gameNames[name] && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
           });
           return { division:{ id:'remote-' + row[1], name:row[1], color:divisionColor(row[1]) }, total:Number(row[2]) || 0, breakdown:breakdown };
         });
