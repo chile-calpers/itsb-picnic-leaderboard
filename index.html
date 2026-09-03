@@ -484,6 +484,8 @@
             if(gameNames[name] && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
           });
           return { division:{ id:'remote-' + row[1], name:row[1], color:divisionColor(row[1]) }, total:Number(row[2]) || 0, breakdown:breakdown };
+        }).sort(function(a, b){
+          return b.total - a.total || a.division.name.localeCompare(b.division.name);
         });
         renderStandings();
       })
