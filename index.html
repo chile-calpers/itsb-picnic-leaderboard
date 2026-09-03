@@ -124,7 +124,6 @@
   .division-total{ font-family:'Bebas Neue',sans-serif; font-size:1.7rem; color:var(--tomato); min-width:38px; text-align:right; }
   .bar-track{ margin-top:8px; height:14px; background:#eee6d0; border:1.5px solid var(--ink); border-radius:8px; overflow:hidden; }
   .bar-fill{ height:100%; min-width:2px; transition:width 0.3s ease; }
-  .bar-fill.light-fill{ border:2px solid var(--ink); }
   details.breakdown{ margin-top:8px; font-size:0.88rem; }
   details.breakdown summary{ cursor:pointer; color:var(--grass-dark); font-weight:600; }
   .breakdown-list{ margin-top:6px; display:flex; flex-direction:column; gap:3px; }
@@ -710,7 +709,7 @@
             (isLeader ? '<span class="leader-badge">🏆 Leading</span>' : '') +
             '<span class="division-total">' + s.total + '</span>' +
           '</div>' +
-          '<div class="bar-track"><div class="bar-fill ' + (s.division.color.toLowerCase() === '#ffffff' ? 'light-fill' : '') + '" style="width:' + pct + '%;background:' + s.division.color + '"></div></div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + s.division.color + '"></div></div>' +
           '<details class="breakdown"><summary>Breakdown</summary><div class="breakdown-list">' + breakdownRows + '</div></details>' +
         '</li>';
       }).join('');
