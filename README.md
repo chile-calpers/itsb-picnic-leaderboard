@@ -24,7 +24,7 @@ The system has four moving parts:
 3. **Sync script** (`sync_form_to_score_entry.gs.js`, installed as an Apps Script trigger) — runs automatically the instant someone submits the form. It reads the raw response, works out which game and category were selected, and writes a clean row into the **Score Entry** tab.
 4. **Score Entry tab → Division Standings / Individual Leaderboards tabs** — these two tabs never touch the Form directly. They contain formulas that constantly read every row in Score Entry and total everything up live. The moment step 3 happens, these two tabs update on their own.
 
-Downstream of all that, if the website is wired up: the website fetches **published CSV versions** of Division Standings and Individual Leaderboards on a timer (roughly every 60 seconds) and displays them. Publishing those CSVs is a manual one-time setup step — see "Connecting to the website" below.
+Downstream of all that, if the website is wired up: the website reads Division Standings and Individual Leaderboards directly via the **Google Sheets API** on a timer (roughly every 60 seconds) and displays them. Wiring that up requires a one-time Google Cloud setup step — see "Connecting to the website" below.
 
 ---
 
@@ -63,15 +63,19 @@ A few game-specific notes worth passing on to scorekeepers directly:
 
 ### Connecting to the website
 
-The website never talks to the Google Sheet or Form directly — it only reads two published CSV links, on a timer. To set that up:
+The website reads the Sheet directly through the **Google Sheets API** (`sheets.googleapis.com`), on a timer. It no longer uses the old "Publish to web" CSV export — that method had an unpredictable caching delay that could show stale standings on some page loads. To set the API-based connection up:
 
-1. In the Sheet: **File → Share → Publish to web**.
-2. Choose the **Division Standings** tab specifically, format **CSV**, and publish. Copy the link.
-3. Repeat for the **Individual Leaderboards** tab. Copy that link too.
-4. Paste both links into the website's source code (the constants `STANDINGS_CSV_URL` and `LEADERBOARDS_CSV_URL`), and paste them into this README's Quick Links table as well.
-5. The website polls both links roughly every 60 seconds — there's no manual "refresh" step needed after this point.
+1. In [Google Cloud Console](https://console.cloud.google.com): create/select a project, then **APIs & Services → Library** → enable **Google Sheets API**.
+2. **APIs & Services → Credentials → Create Credentials → API key.**
+3. Restrict the key immediately — **Application restrictions → Websites** → add the site's actual domain (e.g. `https://itsb-picnic.netlify.app/*`). **API restrictions → Restrict key** → select only Google Sheets API.
+4. Confirm the Sheet's sharing is **Anyone with the link → Viewer** — the API key alone can't read a private sheet.
+5. Note the spreadsheet ID (the long string in the Sheet's edit URL) and the exact tab names for **Division Standings** and **Individual Leaderboards** (as they literally appear on the tabs — the API matches on tab name, not on the tab's internal `gid`).
+6. In the website's source code, update `SPREADSHEET_ID`, `SHEETS_API_KEY`, `STANDINGS_API_URL`, and `LEADERBOARDS_API_URL` accordingly.
+7. The website polls both endpoints roughly every 60 seconds — no manual "refresh" step needed after this point.
 
-If a published CSV link ever needs to change (e.g. you rebuild the Sheet from scratch), both the website's source code and this README need updating together — they'll silently point at stale data otherwise.
+If the spreadsheet is ever rebuilt from scratch (new ID) or a tab gets renamed, the website's source code needs updating to match — it'll otherwise throw a 400 "Unable to parse range" error instead of silently showing stale data.
+
+**Security note:** because this is a fully static site with no backend, the API key ships in the page source and is visible to anyone who views it — this is expected and unavoidable for this architecture, not a leak to fix. The **Websites restriction** in step 3 is what actually protects it: it stops the key from being usable from any origin other than the site's own domain. If the key is ever exposed *unrestricted* (e.g. pasted somewhere before the restriction was applied), treat it as burned and generate a new one rather than relying on retroactively restricting it. Because the key is read-only and the Sheet's data is meant to be public anyway, the worst case of exposure is quota abuse against the Google Cloud project, not data loss or tampering — a bare API key cannot write to the Sheet.
 
 ### Troubleshooting
 
@@ -82,3 +86,6 @@ If a published CSV link ever needs to change (e.g. you rebuild the Sheet from sc
 | Sync script throws "No empty pre-built rows left" | Score Entry's 100 pre-built rows are full — add more rows (with the Points formula copied down) before the next submission. |
 | A number in Division Standings or Individual Leaderboards looks wrong | Check Score Entry for a miscategorized row — wrong Game/Category text, or a Score entered in the wrong unit (most often the "smaller wins" Closest to Ground Target category). |
 | Formulas show `#ERROR!` or `#N/A` after converting from Excel | Some formulas (particularly the leaderboard tie-breaking logic) were built and tested against Excel/LibreOffice, not Google Sheets' formula engine directly — flag the specific broken cell for a fix. |
+| Website shows "unavailable" for standings/leaderboards, browser console shows a 400 error mentioning "Unable to parse range" | The tab name in the website's `STANDINGS_API_URL` / `LEADERBOARDS_API_URL` doesn't exactly match the Sheet's actual tab label (case, spacing, or the Sheet was renamed/rebuilt). Fix the tab name in the source code. |
+| Website shows "unavailable", console shows a 403 error | Either the Sheets API isn't enabled on the Google Cloud project, or the Sheet's sharing was changed away from "Anyone with the link → Viewer". |
+| Website works everywhere except when opened directly as a local file (`file://...`) | Expected — open it through a local HTTP server (e.g. `py -m http.server`) instead of double-clicking `index.html`; this is unrelated to production. |
