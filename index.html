@@ -130,6 +130,7 @@
   .breakdown-row{ display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dashed #ddd; }
   .breakdown-empty{ color:#999; font-style:italic; }
   .last-updated{ margin-top:14px; font-size:0.82rem; color:#777; text-align:right; }
+  .standings-callout{ margin:14px 0 0; padding:10px 12px; background:#fff7dd; border:1.5px solid var(--mustard); border-left:4px solid var(--tomato); font-size:0.86rem; line-height:1.4; }
 
   /* Scorekeeper */
   .scorekeeper-layout{ display:grid; grid-template-columns:220px 1fr; gap:16px; }
@@ -174,8 +175,8 @@
   .category-block > .leaderboard-list{ margin-top:10px; }
 
   .category-block{ border:1.5px solid #ddd; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
-  .category-head{ display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; }
-  .category-head .pts{ background:var(--sky); border:1.5px solid var(--ink); border-radius:20px; padding:1px 9px; font-size:0.75rem; font-weight:700; }
+  .category-head{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-size:0.95rem; }
+  .category-subtitle{ font-size:0.78rem; font-weight:500; color:#777; }
   .cat-note{ font-size:0.78rem; color:#777; margin:4px 0; }
 
   .recent-log-section{ margin-top:6px; }
@@ -258,6 +259,7 @@
       <h2>Division Standings</h2>
       <p class="panel-sub">Live totals, computed from every result logged so far.</p>
       <ul class="standings-list" id="standings-list" aria-live="polite"></ul>
+      <p class="standings-callout"><strong>Scavenger Hunt points are not included in the digital standings.</strong><br>This is your chance to earn more!</p>
       <div class="last-updated" id="last-updated"></div>
     </div>
   </section>
@@ -281,13 +283,16 @@
 
 </main>
 
+<script src="scoring.js"></script>
 <script>
 (function(){
   'use strict';
 
   var STORAGE_KEY = 'picnic-scoreboard';
-  var STANDINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMGw_VEJMHt4LB7eBEjL0PDsLda0B6yAY7BS4nX_hOOyUywwMnzF1T52VUXWMK10h6YOpZRC2Lt5t6/pub?gid=650576605&single=true&output=csv';
-  var LEADERBOARDS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMGw_VEJMHt4LB7eBEjL0PDsLda0B6yAY7BS4nX_hOOyUywwMnzF1T52VUXWMK10h6YOpZRC2Lt5t6/pub?gid=2061706616&single=true&output=csv';
+  var SHEETS_API_KEY = 'AIzaSyDqREV2ef8U80OIr6-pZLYUuZTR0ofgPL4';
+  var SPREADSHEET_ID = '1yH31h0Hf8MDrBIcwyT6BzI2KXsv9ApzFxOlVdJeKSN8';
+  var STANDINGS_API_URL = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID + '/values/Division%20Standings?key=' + SHEETS_API_KEY;
+  var LEADERBOARDS_API_URL = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID + '/values/Individual%20Leaderboards?key=' + SHEETS_API_KEY;
   var PALETTE = ['#7b4bb7','#ffffff','#2f8f5b','#d86645','#f2b233','#5db7c4'];
 
   var SEED_DIVISIONS = [
@@ -447,34 +452,14 @@
     return data;
   }
 
-  function parseCsv(text){
-    var rows = [], row = [], cell = '', quoted = false;
-    for(var i = 0; i < text.length; i++){
-      var character = text[i];
-      var next = text[i + 1];
-      if(character === '"' && quoted && next === '"'){ cell += '"'; i++; }
-      else if(character === '"'){ quoted = !quoted; }
-      else if(character === ',' && !quoted){ row.push(cell.trim()); cell = ''; }
-      else if((character === '\n' || character === '\r') && !quoted){
-        if(character === '\r' && next === '\n') i++;
-        row.push(cell.trim());
-        if(row.some(function(value){ return value !== ''; })) rows.push(row);
-        row = []; cell = '';
-      } else cell += character;
-    }
-    row.push(cell.trim());
-    if(row.some(function(value){ return value !== ''; })) rows.push(row);
-    return rows;
-  }
-
   function refreshRemoteStandings(){
-    fetch(STANDINGS_CSV_URL + '&_=' + Date.now(), { cache:'no-store' })
+    fetch(STANDINGS_API_URL + '&_=' + Date.now(), { cache:'no-store' })
       .then(function(response){
         if(!response.ok) throw new Error('Published standings unavailable');
-        return response.text();
+        return response.json();
       })
-      .then(function(text){
-        var rows = parseCsv(text);
+      .then(function(data){
+        var rows = data.values || [];
         var headerIndex = rows.findIndex(function(row){ return row[0] === 'Rank' && row[1] === 'Division' && row[2] === 'Total Points'; });
         if(headerIndex < 0) throw new Error('Standings header not found');
         var headers = rows[headerIndex];
@@ -483,7 +468,7 @@
         remoteStandings = rows.slice(headerIndex + 1).filter(function(row){ return /^\d+$/.test(row[0]) && row[1]; }).map(function(row){
           var breakdown = {};
           headers.slice(3).forEach(function(name, index){
-            if(gameNames[name] && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
+            if(gameNames[name] && row[index + 3] !== undefined && row[index + 3] !== '') breakdown[name] = { gameName:name, points:Number(row[index + 3]) || 0 };
           });
           return { division:{ id:'remote-' + row[1], name:row[1], color:divisionColor(row[1]) }, total:Number(row[2]) || 0, breakdown:breakdown };
         }).sort(function(a, b){
@@ -501,13 +486,13 @@
   function refreshRemoteLeaderboards(){
     remoteLeaderboardsLoading = true;
     renderLeaderboards();
-    fetch(LEADERBOARDS_CSV_URL + (LEADERBOARDS_CSV_URL.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(), { cache:'no-store' })
+    fetch(LEADERBOARDS_API_URL + (LEADERBOARDS_API_URL.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(), { cache:'no-store' })
       .then(function(response){
         if(!response.ok) throw new Error('Published individual leaderboards unavailable');
-        return response.text();
+        return response.json();
       })
-      .then(function(text){
-        var rows = parseCsv(text);
+      .then(function(data){
+        var rows = data.values || [];
         var headerIndex = rows.findIndex(function(row){ return row[0] === 'Game' && row[1] === 'Category' && row[2] === 'Rank'; });
         if(headerIndex < 0) throw new Error('Individual leaderboards header not found');
         var grouped = {};
@@ -541,60 +526,7 @@
   }
 
   function computeStandings(){
-    var rows = state.divisions.map(function(d){ return { division:d, total:0, breakdown:{} }; });
-    var byId = {};
-    rows.forEach(function(r){ byId[r.division.id] = r; });
-
-    function addPoints(divisionId, game, points){
-      var row = byId[divisionId];
-      if(!row) return;
-      row.total += points;
-      if(!row.breakdown[game.id]) row.breakdown[game.id] = { gameName: game.name, points: 0 };
-      row.breakdown[game.id].points += points;
-    }
-
-    state.games.forEach(function(game){
-      var entries = state.log.filter(function(e){ return e.gameId === game.id; });
-      if(game.scoringType === 'single'){
-        var entry = entries[entries.length - 1];
-        if(entry) addPoints(entry.divisionId, game, Number(game.pointsForWin) || 0);
-      } else if(game.scoringType === 'repeatable'){
-        var counts = {};
-        entries.forEach(function(e){ counts[e.divisionId] = (counts[e.divisionId] || 0) + 1; });
-        Object.keys(counts).forEach(function(divId){
-          addPoints(divId, game, counts[divId] * (Number(game.pointsPerWin) || 0));
-        });
-      } else if(game.scoringType === 'multi-category'){
-        (game.categories || []).forEach(function(cat){
-          var catEntries = entries.filter(function(e){ return e.categoryName === cat.name; });
-          if(cat.repeatable){
-            var counts = {};
-            catEntries.forEach(function(e){ counts[e.divisionId] = (counts[e.divisionId] || 0) + 1; });
-            Object.keys(counts).forEach(function(divId){ addPoints(divId, game, counts[divId] * (Number(cat.points) || 0)); });
-          } else {
-            var catEntry = catEntries[catEntries.length - 1];
-            if(catEntry) addPoints(catEntry.divisionId, game, Number(cat.points) || 0);
-          }
-        });
-      } else if(game.scoringType === 'leaderboard'){
-        if(entries.length){
-          var sorted = sortLeaderboardEntries(entries, game.higherIsBetter);
-          var recordHolder = null;
-          entries.slice().sort(function(a,b){ return a.timestamp - b.timestamp; }).forEach(function(entry){
-            if(recordHolder === null || (game.higherIsBetter ? entry.score > recordHolder : entry.score < recordHolder)){
-              addPoints(entry.divisionId, game, Number(game.pointsForRecord) || 0);
-              recordHolder = entry.score;
-            }
-          });
-          addPoints(sorted[0].divisionId, game, Number(game.pointsForTopScore) || 0);
-        }
-      }
-    });
-
-    rows.sort(function(a,b){
-      return b.total - a.total || a.division.name.localeCompare(b.division.name);
-    });
-    return rows;
+    return PicnicScoring.computeStandings(state);
   }
 
   // ---- mutations ----
@@ -760,7 +692,7 @@
         '</li>';
       }).join('') || '<li class="empty">No scores yet.</li>';
       return '<div class="category-block">' +
-        '<div class="category-head"><strong>' + escapeHtml(category.game + ' - ' + (category.displayCategory || category.category)) + '<small> ' + escapeHtml(category.direction) + '</small></strong><span class="pts">' + category.points + ' pt</span></div>' +
+        '<div class="category-head"><strong>' + escapeHtml(category.game + ' - ' + (category.displayCategory || category.category)) + '</strong><span class="category-subtitle">' + escapeHtml(category.direction + ' ' + category.points + 'pt') + '</span></div>' +
         '<ul class="leaderboard-list">' + rows + '</ul>' +
       '</div>';
     }).join('');
@@ -890,7 +822,7 @@
         var catDiv = catCurrent && state.divisions.find(function(d){ return d.id === catCurrent.divisionId; });
         var categoryPoints = Number(cat.points) || 0;
         return '<div class="category-block">' +
-          '<div class="category-head"><strong>' + escapeHtml(cat.name) + '</strong><span class="pts">' + cat.points + ' pt' + (cat.points === 1 ? '' : 's') + '</span></div>' +
+          '<div class="category-head"><strong>' + escapeHtml(cat.name) + '</strong><span class="category-subtitle">' + categoryPoints + 'pt per result</span></div>' +
           (cat.note ? '<p class="cat-note">' + escapeHtml(cat.note) + '</p>' : '') +
           (cat.repeatable
             ? '<div class="current-record">Successful results logged: <strong>' + catEntries.length + '</strong> (' + (catEntries.length * categoryPoints) + ' points)</div>'
