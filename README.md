@@ -19,7 +19,7 @@ Fill these in as each piece goes live — keeping them all in one place is the p
 
 ## How the whole thing fits together
 
-There is no separate Excel file anymore — everything lives in one Google Sheet. The system has four moving parts:
+The system has four moving parts:
 
 1. **Google Form** — what scorekeepers actually fill out on their phones during the event.
 2. **Google Sheet, raw response tab** — Google Forms writes every submission here automatically. You don't build or maintain this part; it's created and managed by Google Forms itself.
@@ -84,12 +84,3 @@ If a published CSV link ever needs to change (e.g. you rebuild the Sheet from sc
 | Sync script throws "No empty pre-built rows left" | Score Entry's 100 pre-built rows are full — add more rows (with the Points formula copied down) before the next submission. |
 | A number in Division Standings or Individual Leaderboards looks wrong | Check Score Entry for a miscategorized row — wrong Game/Category text, or a Score entered in the wrong unit (most often the "smaller wins" Closest to Ground Target category). |
 | Formulas show `#ERROR!` or `#N/A` after converting from Excel | Some formulas (particularly the leaderboard tie-breaking logic) were built and tested against Excel/LibreOffice, not Google Sheets' formula engine directly — flag the specific broken cell for a fix. |
-
----
-
-## Script reference
-
-Two Apps Script files run this system. Both are `.gs`/`.js` files meant to be pasted into the Apps Script editor, not run locally.
-
-- **`build_google_form.gs.js`** — one-time use. Builds the Google Form itself (all fields, dropdowns, validation) and links it to the existing Sheet. Run once from a standalone Apps Script project. Safe to re-run if the form needs to be rebuilt from scratch (it creates a new Form each time — delete the old one manually afterward).
-- **`sync_form_to_score_entry.gs.js`** — ongoing use, installed as a live trigger. Must be pasted into a script project *bound to the Sheet itself* (Sheet → Extensions → Apps Script), with an `onFormSubmit` / `From spreadsheet` / `On form submit` trigger installed. This is what actually keeps Score Entry up to date — without it, Form responses just sit in the raw tab and never reach the scoring formulas.
