@@ -265,7 +265,7 @@
   <section id="tab-leaderboards" class="tab-panel">
     <div class="panel-card">
       <h2>Individual Leaderboards</h2>
-      <p class="panel-sub">Top individual scores by game category.</p>
+      <p class="panel-sub">Top individual scores by game category. Updates every 60 seconds.</p>
       <div id="leaderboards-list" aria-live="polite"></div>
       <div class="last-updated" id="leaderboards-last-updated"></div>
     </div>
@@ -378,6 +378,7 @@
   var remoteLoadFailed = false;
   var remoteLeaderboards = null;
   var remoteLeaderboardsLoadFailed = false;
+  var remoteLeaderboardsLoading = false;
   var currentTab = 'standings';
   var currentGameId = null;
 
@@ -498,6 +499,8 @@
   }
 
   function refreshRemoteLeaderboards(){
+    remoteLeaderboardsLoading = true;
+    renderLeaderboards();
     fetch(LEADERBOARDS_CSV_URL + (LEADERBOARDS_CSV_URL.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(), { cache:'no-store' })
       .then(function(response){
         if(!response.ok) throw new Error('Published individual leaderboards unavailable');
@@ -515,11 +518,13 @@
         });
         remoteLeaderboards = grouped;
         remoteLeaderboardsLoadFailed = false;
+        remoteLeaderboardsLoading = false;
         renderLeaderboards();
       })
       .catch(function(err){
         console.warn('Could not load published individual leaderboards.', err);
         remoteLeaderboardsLoadFailed = true;
+        remoteLeaderboardsLoading = false;
         renderLeaderboards();
       });
   }
@@ -760,7 +765,7 @@
       '</div>';
     }).join('');
     container.innerHTML = blocks;
-    updated.textContent = 'Live individual leaderboards from Google Sheets';
+    updated.textContent = remoteLeaderboardsLoading ? 'Updating individual leaderboards...' : 'Live individual leaderboards from Google Sheets';
   }
 
   function renderRules(){
