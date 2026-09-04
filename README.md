@@ -6,14 +6,12 @@ This document explains the whole scoring system end to end: the Google Sheet, th
 
 ## Quick links
 
-Fill these in as each piece goes live — keeping them all in one place is the point of this section.
-
 | What | Link |
 |---|---|
-| **Google Sheet** (scores, standings, leaderboards) | https://docs.google.com/spreadsheets/d/1yH31h0Hf8MDrBIcwyT6BzI2KXsv9ApzFxOlVdJeKSN8/edit?usp=sharing |
 | **Google Form** (public — hand this to scorekeepers) | https://docs.google.com/forms/d/e/1FAIpQLSeCuPbfEeDxxmj38BzR3WvZ771SE2sW_Y0L4ZeuOMVo9UiQtA/viewform?usp=dialog |
-| **Google Form** (editable — Chi only) | https://docs.google.com/forms/d/1MsifLbxM6uGic2aTYyIaJp653tqAPwSyuPV-HJwzxwI/edit |
+| **Google Form** (editable — do not give) | https://docs.google.com/forms/d/1MsifLbxM6uGic2aTYyIaJp653tqAPwSyuPV-HJwzxwI/edit |
 | **Public website** (live standings + leaderboards) | https://itsb-picnic.netlify.app/ |
+| **Google Sheet** (scores, standings, leaderboards) | https://docs.google.com/spreadsheets/d/1yH31h0Hf8MDrBIcwyT6BzI2KXsv9ApzFxOlVdJeKSN8/edit?usp=sharing |
 
 ---
 
