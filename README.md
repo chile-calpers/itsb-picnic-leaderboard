@@ -42,15 +42,16 @@ Downstream of all that, if the website is wired up: the website fetches **publis
 
 Hand the **public Form link** to every scorekeeper. One form, no training needed beyond:
 
-1. **What are you scoring?** — pick the game and what happened (e.g. "Bottle Flip — New Record"). This one answer drives everything else.
-2. **Division** — which division the winner(s) belong to.
-3. **Participant** — only needed for individual-leaderboard games (Water Balloon Toss, all 3 Paper Airplanes categories, Hula Hoop, Bottle Flip). Leave blank for simple division wins (Cornhole, Water Pong, Flip Cup).
-4. **Score** — same rule as Participant: only for individual-leaderboard games. The field's own help text lists what unit to use per game (feet, seconds, or flip count) — **worth a heads-up to scorekeepers that "Closest to Ground Target (Hula Hoop)" is the one game where a *smaller* number wins**, since that's the easiest mistake to make.
-5. **Entered By** — who's submitting.
-6. **Notes** — optional, freeform.
+1. **Division** — which division the winner(s) belong to.
+2. **Entered By** — your first name, in case there's a scoring error that needs confirming with you.
+3. **Notes** — optional, freeform. Flag anything worth knowing (tie, dispute, re-do, etc.).
+4. **Which game are you scoring** — pick the game and what happened (e.g. "Bottle Flip — New Record"). This one answer drives everything else — the form automatically jumps to the right follow-up questions:
+   - **Cornhole, Flip Cup, Water Pong** → nothing else to fill in. Submitting logs the win.
+   - **Bottle Flip, Hula Hoop, Water Balloon Toss** → you'll be asked for **Participant Name** and **Score**.
+   - **Paper Airplanes** (any of its 3 categories) → you'll first pick **Which category?**, then enter **Participant Name** and **Score**.
+5. **Score** (when asked) — the field's own help text lists what unit to use per game (feet, seconds, or flip count) — **worth a heads-up to scorekeepers that "Closest to Ground Target (Hula Hoop)" is the one game where a *smaller* number wins**, since that's the easiest mistake to make.
 
 A few game-specific notes worth passing on to scorekeepers directly:
-
 - **Hula Hoop**: log each new personal best as a participant climbs toward 15 seconds — no need to log every single attempt below that. Once someone hits 15 seconds or more, log *every* attempt at 15s+, since each one earns a point and any of them could become the new longest-overall record.
 - **Bottle Flip**: only the volunteer tracking records should log "New Record" entries, the moment a new record actually happens. The 5-point "current leader" bonus is fully automatic — there's no separate "final winner" step to remember.
 - **Responses can be edited after submitting** — if a scorekeeper makes a typo, they can go back into their own submission and fix it rather than needing you to intervene.
