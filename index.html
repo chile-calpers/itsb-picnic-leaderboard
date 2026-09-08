@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ITSB Picnic Leaderboard | CalPERS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%A7%BA</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --grass:#007f86;
-    --grass-dark:#123b59;
-    --grass-light:#159aa0;
+    --grass:#0070aa;
+    --grass-dark:#004d73;
+    --grass-light:#4da3cc;
     --mustard:#f2b233;
     --tomato:#d86645;
     --sky:#5db7c4;
@@ -151,7 +152,7 @@
   .game-how{ margin:0 0 6px; font-size:0.88rem; background:#fff7dd; border-left:4px solid var(--mustard); padding:6px 10px; }
   .game-notes{ margin:0 0 12px; font-size:0.82rem; color:#666; font-style:italic; }
 
-  .current-record{ font-size:0.9rem; margin:8px 0; padding:6px 10px; background:#eef6ec; border-radius:6px; border:1.5px dashed var(--grass); }
+  .current-record{ font-size:0.9rem; margin:8px 0; padding:6px 10px; background:#e7f2f8; border-radius:6px; border:1.5px dashed var(--grass); }
 
   .score-form{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin:10px 0 6px; }
   .score-form label{ display:flex; flex-direction:column; font-size:0.78rem; font-weight:600; color:#444; gap:4px; }
@@ -226,7 +227,7 @@
   .danger-zone{ margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; }
   .danger-zone .btn{ background:#fff; }
 
-  .qr-note{ margin-top:16px; font-size:0.82rem; background:#eef6ec; border:1.5px dashed var(--grass); border-radius:8px; padding:10px 12px; color:#345; }
+  .qr-note{ margin-top:16px; font-size:0.82rem; background:#e7f2f8; border:1.5px dashed var(--grass); border-radius:8px; padding:10px 12px; color:#345; }
 
   @media (max-width:480px){
     .division-total{ font-size:1.4rem; }
@@ -257,17 +258,16 @@
   <section id="tab-standings" class="tab-panel">
     <div class="panel-card">
       <h2>Division Standings</h2>
-      <p class="panel-sub">Live totals, computed from every result logged so far.</p>
+      <p class="panel-sub">Live totals, computed from every result logged so far. Updates every 60s.</p>
       <ul class="standings-list" id="standings-list" aria-live="polite"></ul>
-      <p class="standings-callout"><strong>Scavenger Hunt points are not included in the digital standings.</strong><br>This is your chance to earn more!</p>
-      <div class="last-updated" id="last-updated"></div>
+      <p class="standings-callout"><strong>Scavenger Hunt points aren't added to the standings until the event ends.</strong><br>This is your chance to earn more!</p>      <div class="last-updated" id="last-updated"></div>
     </div>
   </section>
 
   <section id="tab-leaderboards" class="tab-panel">
     <div class="panel-card">
       <h2>Individual Leaderboards</h2>
-      <p class="panel-sub">Top individual scores by game category. Updates every 60 seconds.</p>
+      <p class="panel-sub">Top individual scores by game category. Updates every 60s.</p>
       <div id="leaderboards-list" aria-live="polite"></div>
       <div class="last-updated" id="leaderboards-last-updated"></div>
     </div>
@@ -308,7 +308,7 @@
       scoringType:'single',
       pointsForWin:5,
       description:'Open free play. Users sign up in duos and toss a water balloon back and forth, moving farther apart after each successful catch.',
-      howToScore:'The longest successful duo toss earns 5 division points, bragging rights, and a prize.',
+      howToScore:'Nothing is logged per throw — only the single longest successful catch of the whole event is tracked. Whichever division holds that record when the event ends earns 5 division points, bragging rights, and a prize.',
       notes:'Water faucet onsite.'
     },
     {
@@ -318,8 +318,8 @@
       pointsPerWin:1,
       pointsPerWinUnconfirmed:true,
       description:'Open play and tournament play. Play to 11 points. After 3 consecutive wins, the winning team rotates out to give others a turn.',
-      howToScore:'Score division points through game wins. A bag on the board is worth 1 point, a bag through the hole is worth 3 points, and opposing bags cancel each other out. Tournament winners also receive a prize.',
-      notes:'Open play and tournament play.'
+      howToScore:'The 1-point-on-board / 3-point-through-the-hole scoring only decides who wins the underlying game to 11 — it has no direct bearing on division points. Each completed game win, regardless of final score, earns the winning division 1 division point, with no limit to plays.',
+      notes:'Tournament winners also receive a prize.'
     },
     {
       id:'water-pong',
@@ -327,8 +327,8 @@
       scoringType:'repeatable',
       pointsPerWin:1,
       description:'Open play and tournament play. Teams of 2 play timed elimination rounds.',
-      howToScore:'The team that eliminates the most cups wins the round and earns 1 division point. Tournament winners also receive a prize.',
-      notes:'Each end uses six cups partially filled with water.'
+      howToScore:'The team that eliminates the most cups before time runs out wins the round and earns 1 division point, with no limit to plays.',
+      notes:'Each end uses six cups partially filled with water. Tournament winners also receive a prize.'
     },
     {
       id:'mini-flip-cup',
@@ -336,7 +336,7 @@
       scoringType:'repeatable',
       pointsPerWin:1,
       description:'Competitive timed team rounds. Teams may have 2, 4, 6, or more players, with one cup per team member.',
-      howToScore:'Every person must successfully flip their cup. First team to flip all three cups wins the round = 1 point for that division.',
+      howToScore:'Every person on the team must successfully flip their own cup. The first team to have everyone flip their cup wins the round and earns 1 division point.',
       notes:'No limit to plays.'
     },
     {
@@ -344,12 +344,12 @@
       name:'Paper Airplanes',
       scoringType:'multi-category',
       categories:[
-        { name:'Farthest Flight', points:1 },
-        { name:'Longest Airborne / Hang Time', points:1 },
-        { name:'Closest to Ground Target (Hula Hoop)', points:1, note:'Landing inside the target earns 1 division point.' }
+        { name:'Farthest Flight', points:1, note:'Only the single longest flight of the whole event counts.' },
+        { name:'Longest Airborne / Hang Time', points:1, note:'Only the single longest hang time of the whole event counts.' },
+        { name:'Closest to Ground Target (Hula Hoop)', points:1, note:'Closer wins, not farther — only the single closest landing of the whole event counts.' }
       ],
       description:'Fold a paper airplane and compete across three categories.',
-      howToScore:'',
+      howToScore:'Nothing is logged per throw. For each category, only the single best result of the entire event counts, and whichever division holds it when the event ends earns that category\'s 1 point — up to 3 points total across all three.',
       notes:'Paper, a measuring tape or stakes, and a hula hoop ground target are needed.'
     },
     {
@@ -361,7 +361,7 @@
       scoreUnit:'successful flips in 30 seconds',
       higherIsBetter:true,
       description:'Open play leaderboard. Each participant has 30 seconds and no limit to tries during the attempt.',
-      howToScore:'The first record and each successive winning score earn 1 division point. The participant with the most flips at the end of the event earns 5 division points, a prize, and bragging rights.',
+      howToScore:'An attempt only gets logged if it beats the current all-time best — the very first attempt of the event counts automatically, and after that, only a higher flip count than anything logged so far gets recorded. Each logged attempt earns 1 division point on the spot. Whichever division holds the highest flip count when the event ends earns an additional 5 division points, a prize, and bragging rights.',
       notes:'Uses Kirkland 16oz water bottles, quarter-filled with water.'
     },
     {
@@ -369,11 +369,11 @@
       name:'Hula Hoop',
       scoringType:'multi-category',
       categories:[
-        { name:'Longest Overall Hula Hooper', points:5 },
-        { name:'Successful Hula Hoop (15+ seconds)', points:1, repeatable:true, note:'Each successful hula hoop must last at least 15 seconds.' }
+        { name:'Longest Overall Hula Hooper', points:5, note:'Whichever division holds the single longest hula hoop of the whole event when it ends earns this bonus.' },
+        { name:'Successful Hula Hoop (15+ seconds)', points:1, repeatable:true, note:'Every attempt lasting at least 15 seconds earns this, with no limit to how many times it can happen.' }
       ],
       description:'Open free play.',
-      howToScore:'The longest overall hula hooper earns 5 division points and a prize. Each successful hula hoop lasting at least 15 seconds earns 1 division point.',
+      howToScore:'Two separate rewards apply here — see each category below for how it\'s earned.',
       notes:'This is much harder than you think - trust the testers.'
     }
   ];
@@ -654,7 +654,7 @@
     }
 
     var lastTs = state.log.reduce(function(m, e){ return Math.max(m, e.timestamp); }, 0);
-    document.getElementById('last-updated').textContent = remoteStandings ? 'Live standings from Google Sheets' : (lastTs ? ('Last updated ' + new Date(lastTs).toLocaleString()) : 'No results logged yet');
+    document.getElementById('last-updated').textContent = remoteStandings ? 'Live standings' : (lastTs ? ('Last updated ' + new Date(lastTs).toLocaleString()) : 'No results logged yet');
   }
 
   function renderLeaderboards(){
@@ -697,7 +697,7 @@
       '</div>';
     }).join('');
     container.innerHTML = blocks;
-    updated.textContent = remoteLeaderboardsLoading ? 'Updating individual leaderboards...' : 'Live individual leaderboards from Google Sheets';
+    updated.textContent = remoteLeaderboardsLoading ? 'Updating individual leaderboards...' : 'Live individual leaderboards';
   }
 
   function renderRules(){
