@@ -36,7 +36,7 @@ Downstream of all that, if the website is wired up: the website reads Division S
 - [ ] Confirm the Google Form is built and its response destination is this Sheet.
 - [ ] Confirm the sync script's trigger is installed (Sheet → Extensions → Apps Script → clock icon → should show one `onFormSubmit` trigger, `From spreadsheet`, `On form submit`).
 - [ ] Submit one real test entry through the public Form for each rough category — an individual-leaderboard game (e.g. Hula Hoop) and a simple division-win game (e.g. Cornhole) — and confirm both land correctly in Score Entry with Division Standings updating.
-- [ ] If using the website, publish both output tabs as CSV (see below) and paste the links into this README's Quick Links table.
+- [ ] If using the website, confirm the Google Sheets API connection is set up (see "Connecting to the website" below).
 
 ### During the event — using the Form
 
